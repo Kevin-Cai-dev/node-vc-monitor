@@ -19,3 +19,4 @@ Homepage") for providing guides to aid in the development of the bot.
 - Add command recognition, any suggestions for commands would be appreciated!
 - Design a simple front-end page to monitor the status of the bot
 - Implement dynamic help command
+- Add checks in subscribe commands to ensure users have permissions to view
