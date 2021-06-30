@@ -1,0 +1,7 @@
+commands:
+- change prefix
+- subscribe/unsubscribe to specific channels only
+- help command should list all commands, link to github page
+- change notification intervals serverwide
+
+temporarily store data in json file, plan to migrate to database storage later
