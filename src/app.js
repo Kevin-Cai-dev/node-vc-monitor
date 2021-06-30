@@ -1,9 +1,20 @@
 const fs = require('fs')
 require('dotenv').config()
-const discord = require('discord.js')
-const { create } = require('domain')
+const Discord = require('discord.js')
 
-const client = new discord.Client()
+const client = new Discord.Client()
+client.commands = new Discord.Collection()
+
+// Adding commands to client
+const commandFolders = fs.readdirSync('./commands')
+
+for (const folder of commandFolders) {
+    const commandFiles = fs.readdirSync(`./commands/${folder}`).filter((file) => file.endsWith('.js'))
+    for (const file of commandFiles) {
+        const command = require(`../commands/${folder}/${file}`)
+        client.commands.set(command.name, command)
+    }
+}
 const prefix = process.env.PREFIX;
 
 const JSONData = fs.readFileSync('data/database.json')
@@ -48,7 +59,7 @@ const updateDatabase = () => {
     fs.writeFileSync('data/database.json', newBotData)
 }
 
-// start up discord bot
+// start up Discord bot
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}`)
     updateDatabase()
@@ -56,7 +67,41 @@ client.on('ready', () => {
 
 // event handler to respond to messages/commands
 client.on('message', (message) => {
-    console.log(message)
+    if (!message.content.startsWith(prefix) || message.author.bot) {
+        return
+    }
+    // split up command args on whitespaces
+    const args = message.content.slice(prefix.length).trim().split(/ +/)
+    const commandName = args.shift().toLowerCase()
+
+    // not a registered command of the bot
+    if (!client.commands.has(commandName)) {
+        return
+    }
+
+    const command = client.commands.get(commandName)
+
+    // prevent sending commands outside of a server
+    if (command.guildOnly && message.channel.type === 'dm') {
+        return message.reply('Cannot execute that command outside of a server!')
+    }
+
+    // args are required but not provided
+    if (command.args && !args.length) {
+        let reply = 'Arguments are required!'
+        if (command.usage) {
+            reply += `\nThe proper usage would be: \`${prefix}${command.name} ${command.usage}\``
+        }
+        return message.channel.send(reply)
+    }
+
+    // execute the command
+    try {
+        command.execute(message, args)
+    } catch (error) {
+        console.error(error)
+        message.reply('There was an error trying to execute that command')
+    }
 })
 
 // event handler to monitor users joining voice channels
