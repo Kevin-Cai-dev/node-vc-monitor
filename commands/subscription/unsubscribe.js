@@ -1,10 +1,11 @@
 const fs = require('fs')
+const { argv } = require('process')
 
 module.exports = {
-    name: 'subscribe',
-    description: 'Command to subscribe to one or more voice channels',
+    name: 'unsubscribe',
+    description: 'command to unsubscribe from one or more voice channels',
     args: true,
-    usage: '<channelNames | all>',
+    usage: '<voiceChannels | all>',
     guildOnly: true,
     execute(message, args) {
         const JSONData = fs.readFileSync('data/database.json')
@@ -15,16 +16,13 @@ module.exports = {
         const vcAll = guild.channels.cache.filter((channel) => channel.type === 'voice')
         let flag = true
 
-        // attempt to add to all voice channels
         if (args[0] === 'all' && args.length === 1) {
+            console.log('wow!')
             server.vc.forEach((channel) => {
-                const exists = channel.subscribed.some((uid) => uid === member.id)
-                if (!exists) {
-                    channel.subscribed.push(member.id)
-                }
+                const index = channel.subscribed.indexOf(member.id)
+                channel.subscribed.splice(index, 1)
             })
         } else {
-            // only add to specified channels in args
             for (let i = 0; i < args.length; i++) {
                 const vc = vcAll.find((channel) => channel.name.toLowerCase() === args[i])
                 if (!vc) {
@@ -36,16 +34,12 @@ module.exports = {
                     flag = false
                     break
                 }
-                const exists = found.subscribed.some((uid) => uid === member.id)
-                if (exists) {
-                    continue
-                }
-                found.subscribed.push(member.id)
+                const index = found.subscribed.indexOf(member.id)
+                found.subscribed.splice(index, 1)
             }
         }
 
         if (flag) {
-            // commit changes here
             const newBotData = JSON.stringify(newData)
             fs.writeFileSync('data/database.json', newBotData)
             data = newData
