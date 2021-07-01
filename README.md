@@ -12,8 +12,7 @@ allowing me to learn new tools. It is currently hosted by me on Heroku.
 
 WARNING: This bot has not been fully tested and may contain bugs. If you ever want to use it, be careful. Performance across multiple servers has not been tested very thoroughly (since I don't have many servers to test it on) and may produce unexpected results.
 
-You can access the [bot](https://discord.com/api/oauth2/authorize?client_id=859728389883953163&permissions=142480&scope=bot)
-here.
+You can access the bot [here](https://discord.com/api/oauth2/authorize?client_id=859728389883953163&permissions=142480&scope=bot).
 
 Credit to the [Discord.js Guide](https://discordjs.guide/ "Discord.js Guide
 Homepage") and [Discord.js documentation](https://discord.js.org/#/docs/main/stable/general/welcome
