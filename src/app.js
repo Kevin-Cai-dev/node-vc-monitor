@@ -157,7 +157,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
                 if (member.id != user) {
                     const receiver = guild.members.cache.get(user)
                     try {
-                        member.send(`${receiver}, ${member.displayName} joined the voice channel ${newChannel.displayName} in server \'${guild.name}\'!`)  
+                        user.send(`${receiver}, ${member.displayName} joined the voice channel ${newChannel.displayName} in server \'${guild.name}\'!`)  
                     } catch (error) {
                         console.error(error)
                     }                    
