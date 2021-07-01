@@ -68,15 +68,26 @@ client.on('ready', () => {
 
 // event handler to respond to messages/commands
 client.on('message', (message) => {
-    const guild = message.guild
-    const server = data.find((server) => server.serverID === guild.id)
-    if (!server) {
+    if (message.author.bot) {
         return
     }
-    const sPrefix = server.prefix
+    let sPrefix = undefined
+    let server = undefined
+    const guild = message.guild
+    if (!guild) {
+        sPrefix = process.env.PREFIX
+    } else {
+        server = data.find((server) => server.serverID === guild.id)
+        if (!server) {
+            return
+        }
+        sPrefix = server.prefix
+    }
+
     if (!message.content.startsWith(sPrefix) || message.author.bot) {
         return
     }
+    
     // split up command args on whitespaces
     const msg = message.content.slice(sPrefix.length)
     let len = msg.length
@@ -154,8 +165,9 @@ client.on('voiceStateUpdate', (oldState, newState) => {
             const server = data.find((element) => element.serverID === guildID)
             const subscriptions = server.vc.find((channel) => channel.vcID === channelID)
             subscriptions.subscribed.forEach((user) => {
-                if (member.id != user) {
+                if (member.id !== user) {
                     const receiver = guild.members.cache.get(user)
+                    console.log(user)
                     try {
                         receiver.send(`${receiver}, ${member.displayName} joined the voice channel ${newChannel.displayName} in server \'${guild.name}\'!`)
                     } catch (error) {

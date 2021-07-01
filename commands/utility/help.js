@@ -5,6 +5,7 @@ module.exports = {
     name: 'help',
     description: 'List all of my commands or info about a specific command',
     uasge: '[command name]',
+    guildOnly: true,
     execute(message, args, callback) {
         const data = []
         const { commands } = message.client
