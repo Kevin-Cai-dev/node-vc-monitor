@@ -7,6 +7,7 @@ module.exports = {
     args: true,
     usage: '<channelName1,channelName2 ... | all>',
     guildOnly: true,
+    aliases: ['unsub', 'us'],
     execute(message, args, callback) {
         // load in stored data
         const JSONData = fs.readFileSync('data/database.json')
@@ -37,7 +38,7 @@ module.exports = {
                 const { bestMatch } = stringSimilarity.findBestMatch(args[i], vcNames)
 
                 // finding voice channel matching given name
-                const vc = vcAll.find((channel) => channel.name === bestMatch.target)
+                const vc = vcAll.find((channel) => channel.name.toLowerCase() === bestMatch.target)
                 
                 if (!vc) {
                     error = 'Could not find channel(s)'

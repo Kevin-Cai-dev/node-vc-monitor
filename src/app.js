@@ -8,6 +8,7 @@ client.commands = new Discord.Collection()
 // Adding commands to client
 const commandFolders = fs.readdirSync('./commands')
 
+// load commands into client
 for (const folder of commandFolders) {
     const commandFiles = fs.readdirSync(`./commands/${folder}`).filter((file) => file.endsWith('.js'))
     for (const file of commandFiles) {
@@ -15,11 +16,14 @@ for (const folder of commandFolders) {
         client.commands.set(command.name, command)
     }
 }
+// retrieve default prefix
 const prefix = process.env.PREFIX;
 
+// load JSON data
 const JSONData = fs.readFileSync('data/database.json')
 let data = JSON.parse(JSONData)
 
+// helper function to create voice channel object for JSON data
 const createVC = (vcID) => {
     return {
         vcID,
@@ -27,6 +31,7 @@ const createVC = (vcID) => {
     }
 }
 
+// helper function to create server object for JSON data
 const createServer = (serverID) => {
     return {
         serverID,
@@ -35,6 +40,7 @@ const createServer = (serverID) => {
     }
 }
 
+// Create a new entry for the JSON database for a new server
 const createData = (serverID, data) => {
     const guild = client.guilds.cache.get(serverID)
     const obj = createServer(serverID)
@@ -43,6 +49,7 @@ const createData = (serverID, data) => {
     data.push(obj)
 }
 
+// Updating database to remove old servers + add new servers
 const updateDatabase = () => {
     const guilds = client.guilds.cache.array().map(server => server.id)
     // removing servers which the bot is not present in
@@ -68,12 +75,15 @@ client.on('ready', () => {
 
 // event handler to respond to messages/commands
 client.on('message', (message) => {
+    // message is from a bot
     if (message.author.bot) {
         return
     }
     let sPrefix = undefined
     let server = undefined
     const guild = message.guild
+
+    // message was from dm, use default prefix
     if (!guild) {
         sPrefix = process.env.PREFIX
     } else {
@@ -84,7 +94,8 @@ client.on('message', (message) => {
         sPrefix = server.prefix
     }
 
-    if (!message.content.startsWith(sPrefix) || message.author.bot) {
+    // message does not start with prefix
+    if (!message.content.startsWith(sPrefix)) {
         return
     }
     
@@ -95,26 +106,30 @@ client.on('message', (message) => {
         len = msg.indexOf(' ')
     }
 
+    // get command name
     const commandName = msg.substr(0, len).toLowerCase().trim()
 
     let regex = / +/
 
+    // change regex split pattern for subscription commands, split on commas
     if (commandName === 'subscribe' || commandName === 'unsubscribe') {
         regex = /\s*,\s*(?![^(]*\))/
     }
     
     let args = msg.substr(len + 1).trim().split(regex)
 
+    // no args, set args variable to empty array
     if (len === msg.length) {
         args = []
     }
 
-    // not a registered command of the bot
-    if (!client.commands.has(commandName)) {
+    // retrieve matching command
+    const command = client.commands.get(commandName) || client.commands.find((cmd) => cmd.aliases && cmd.aliases.includes(commandName))
+    
+    // no matching command exists
+    if (!command) {
         return
     }
-
-    const command = client.commands.get(commandName)
 
     // prevent sending commands outside of a server
     if (command.guildOnly && message.channel.type === 'dm') {
@@ -161,13 +176,18 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     if (!oldChannel && newChannel) {
         const channelID = newChannel.id
         const numUsers = newChannel.members.array().length
+        // no activity previously in the voice channel
         if (numUsers === 1) {
+            // find matching server data
             const server = data.find((element) => element.serverID === guildID)
+            // find matching voice channel data
             const subscriptions = server.vc.find((channel) => channel.vcID === channelID)
+            // iterate through all subscribed users of the voice channel
             subscriptions.subscribed.forEach((user) => {
+                // user is not the same as the user who joined
                 if (member.id !== user) {
                     const receiver = guild.members.cache.get(user)
-                    console.log(user)
+                    // send dm notification
                     try {
                         receiver.send(`${receiver}, ${member.displayName} joined the voice channel ${newChannel.displayName} in server \'${guild.name}\'!`)
                     } catch (error) {
@@ -188,27 +208,27 @@ client.on('guildCreate', (guild) => {
 
     let channelID = undefined
     const channels = guild.channels.cache.array()
-    console.log(channels)
 
+    // find the first text channel in the server
     for (const key in channels) {
         const c = channels[key]
         if (c.type === 'text') {
-            console.log('wow')
             channelID = c.id;
             break
         }
     }
 
     if (channelID) {
+        // locate either the systemChannel or the first text channel
         const id = guild.systemChannelID || channelID
         const channel = channels.find((c) => c.id === id)
-        console.log(channel)
+        // send an introduction message to the server
         channel.send(`Hi, I\'m a bot designed to monitor voice channels. Type \`${prefix}help\` to get started!`)
     }
 
 })
 
-//event handler for server leaving
+//event handler for server leaving, removes server from database
 client.on('guildDelete', (guild) => {
     const guildID = guild.id
     const newData = data.filter((obj) => obj.serverID !== guildID)

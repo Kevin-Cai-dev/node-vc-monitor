@@ -7,6 +7,7 @@ module.exports = {
     args: true,
     usage: '<channelName1,channelName2 ... | all>',
     guildOnly: true,
+    aliases: ['sub', 's'],
     execute(message, args, callback) {
         // load in stored data
         const JSONData = fs.readFileSync('data/database.json')
@@ -18,6 +19,7 @@ module.exports = {
         // extract all voice channels in server
         const vcAll = guild.channels.cache.filter((channel) => channel.type === 'voice')
         const vcNames = vcAll.map((vc) => vc.name.toLowerCase())
+        console.log(vcNames)
         let error = undefined
         let response = 'Successfully subscribed!'
 
@@ -41,7 +43,7 @@ module.exports = {
                 const { bestMatch } = stringSimilarity.findBestMatch(args[i], vcNames)
 
                 // finding voice channel
-                const vc = vcAll.find((channel) => channel.name === bestMatch.target)
+                const vc = vcAll.find((channel) => channel.name.toLowerCase() === bestMatch.target)
                 if (!vc) {
                     error = 'Could not find channel(s)'
                     break
