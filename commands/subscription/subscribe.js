@@ -19,7 +19,6 @@ module.exports = {
         // extract all voice channels in server
         const vcAll = guild.channels.cache.filter((channel) => channel.type === 'voice')
         const vcNames = vcAll.map((vc) => vc.name.toLowerCase())
-        console.log(vcNames)
         let error = undefined
         let response = 'Successfully subscribed!'
 

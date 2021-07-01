@@ -5,6 +5,8 @@ const Discord = require('discord.js')
 const client = new Discord.Client()
 client.commands = new Discord.Collection()
 
+const recentDM = new Set()
+
 // Adding commands to client
 const commandFolders = fs.readdirSync('./commands')
 
@@ -187,9 +189,18 @@ client.on('voiceStateUpdate', (oldState, newState) => {
                 // user is not the same as the user who joined
                 if (member.id !== user) {
                     const receiver = guild.members.cache.get(user)
+                    console.log(newChannel)
+                    if (recentDM.has(receiver.id)) {
+                        return
+                    }
+
                     // send dm notification
                     try {
-                        receiver.send(`${receiver}, ${member.displayName} joined the voice channel ${newChannel.displayName} in server \'${guild.name}\'!`)
+                        receiver.send(`${receiver}, ${member.displayName} joined the voice channel ${newChannel.name} in server \'${guild.name}\'!`)
+                        recentDM.add(receiver.id)
+                        setTimeout(() => {
+                            recentDM.delete(receiver.id)
+                        }, 20000)
                     } catch (error) {
                         console.error(error)
                     }                    
