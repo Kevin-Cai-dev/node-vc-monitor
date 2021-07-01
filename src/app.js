@@ -97,7 +97,15 @@ client.on('message', (message) => {
 
     // execute the command
     try {
-        command.execute(message, args)
+        command.execute(message, args, (error, response, rData) => {
+            if (error) {
+                return message.reply(error)
+            }
+            const newBotData = JSON.stringify(rData)
+            fs.writeFileSync('data/database.json', newBotData)
+            data = rData
+            return message.reply(response)
+        })
     } catch (error) {
         console.error(error)
         message.reply('There was an error trying to execute that command')

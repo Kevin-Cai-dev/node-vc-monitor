@@ -6,7 +6,7 @@ module.exports = {
     args: true,
     usage: '<channelNames | all>',
     guildOnly: true,
-    execute(message, args) {
+    execute(message, args, callback) {
         // load in stored data
         const JSONData = fs.readFileSync('data/database.json')
         const newData = JSON.parse(JSONData)
@@ -16,13 +16,16 @@ module.exports = {
         const server = newData.find((element) => element.serverID === guild.id)
         // extract all voice channels in server
         const vcAll = guild.channels.cache.filter((channel) => channel.type === 'voice')
-        let flag = true
+        let error = undefined
+        let response = 'Successfully subscribed!'
 
         // 'all' arg specified, attempting to subscribe to all voice channels
         if (args[0] === 'all' && args.length === 1) {
             server.vc.forEach((channel) => {
                 const exists = channel.subscribed.some((uid) => uid === member.id)
-                if (!exists) {
+                const vcChannel = guild.channels.cache.get(channel.vcID)
+
+                if (!exists && vcChannel.permissionsFor(member).has('VIEW_CHANNEL')) {
                     channel.subscribed.push(member.id)
                 }
             })
@@ -33,32 +36,37 @@ module.exports = {
                 // finding voice channel matching given name
                 const vc = vcAll.find((channel) => channel.name.toLowerCase() === args[i])
                 if (!vc) {
-                    flag = false
+                    error = 'Could not find channel(s)'
                     break
                 }
                 // finding matching voice channel data entry
                 const found = server.vc.find((channel) => channel.vcID === vc.id)
                 if (!found) {
-                    flag = false
+                    error = 'Could not find channel(s)'
                     break
                 }
-                // member already exists, ignore
+
                 const exists = found.subscribed.some((uid) => uid === member.id)
+                const vcChannel = guild.channels.cache.get(found.vcID)
+
                 if (exists) {
                     continue
                 }
-                // add member to subscription list
-                found.subscribed.push(member.id)
+
+                if (vcChannel.permissionsFor(member).has('VIEW_CHANNEL')) {
+                    // add member to subscription list
+                    found.subscribed.push(member.id)
+                } else {
+                    error = 'Could not find channel(s)'
+                }
+
             }
         }
 
-        if (flag) {
-            // commit changes
-            const newBotData = JSON.stringify(newData)
-            fs.writeFileSync('data/database.json', newBotData)
-            data = newData
+        if (error) {
+            callback(error)
         } else {
-            message.channel.send('Could not find channel(s).')
+            callback(undefined, response, newData)
         }
     }
 }
