@@ -136,8 +136,6 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     // a new user has joined an empty voice channel
     if (!oldChannel && newChannel) {
         const channelID = newChannel.id
-        // console.log(member)
-        // console.log(`${member.displayName} joined ${newChannel.name}!`)
         const numUsers = newChannel.members.array().length
         if (numUsers === 1) {
             const server = data.find((element) => element.serverID === guildID)
