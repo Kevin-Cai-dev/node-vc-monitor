@@ -21,7 +21,9 @@ module.exports = {
         // no args provided
         if (!args.length) {
             data.push('Here is a list of all available commands:')
-            data.push(commands.map((command) => `\`${command.name}\``).join('\n'))
+            data.push(`\``)
+            data.push(commands.map((command) => command.name).join('\n'))
+            data.push(`\``)
             data.push(`You can send \`${prefix}help [command name]\` to get info on a specific command`)
             return message.channel.send(data, { split: true })
         }
