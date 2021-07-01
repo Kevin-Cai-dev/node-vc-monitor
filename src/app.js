@@ -78,8 +78,12 @@ client.on('message', (message) => {
         return
     }
     // split up command args on whitespaces
-    const args = message.content.slice(sPrefix.length).trim().split(/ +/)
-    const commandName = args.shift().toLowerCase()
+    const msg = message.content.slice(sPrefix.length)
+    const commandName = msg.substr(0, msg.indexOf(' ')).toLowerCase()
+    const args = msg.substr(msg.indexOf(' ') + 1).trim().split(/\s*,\s*(?![^(]*\))/)
+
+    console.log(args)
+    console.log(commandName)
 
     // not a registered command of the bot
     if (!client.commands.has(commandName)) {

@@ -1,11 +1,11 @@
 const fs = require('fs')
-const { argv } = require('process')
+const stringSimilarity = require('string-similarity')
 
 module.exports = {
     name: 'unsubscribe',
     description: 'command to unsubscribe from one or more voice channels',
     args: true,
-    usage: '<voiceChannels | all>',
+    usage: '<channelName1,channelName2 ... | all>',
     guildOnly: true,
     execute(message, args, callback) {
         // load in stored data
@@ -17,6 +17,7 @@ module.exports = {
         const server = newData.find((element) => element.serverID === guild.id)
         // extract all voice channel in server
         const vcAll = guild.channels.cache.filter((channel) => channel.type === 'voice')
+        const vcNames = vcAll.map((vc) => vc.name.toLowerCase())
         let error = undefined
         let response = 'Unsubscribed successfully!'
 
@@ -30,8 +31,13 @@ module.exports = {
         // attempt to unsubscribe from all specified channel names
         else {
             for (let i = 0; i < args.length; i++) {
+                args[i] = args[i].trim()
+
+                // finding the best matching voice channel name based on args
+                const { bestMatch } = stringSimilarity.findBestMatch(args[i], vcNames)
+
                 // finding voice channel matching given name
-                const vc = vcAll.find((channel) => channel.name.toLowerCase() === args[i])
+                const vc = vcAll.find((channel) => channel.name === bestMatch.target)
                 
                 if (!vc) {
                     error = 'Could not find channel(s)'
@@ -51,7 +57,6 @@ module.exports = {
                 } else {
                     error = 'Could not find channel(s)'
                 }
-                
             }
         }
 
@@ -60,14 +65,5 @@ module.exports = {
         } else {
             callback(undefined, response, newData)
         }
-
-        // if (flag) {
-        //     // commit changes
-        //     const newBotData = JSON.stringify(newData)
-        //     fs.writeFileSync('data/database.json', newBotData)
-        //     data = newData
-        // } else {
-        //     message.channel.send('Could not find channel(s).')
-        // }
     }
 }
