@@ -11,7 +11,8 @@ This is a self-project aimed to both provide a useful service as well as
 allowing me to learn new tools.
 
 Credit to the [Discord.js Guide](https://discordjs.guide/ "Discord.js Guide
-Homepage") for providing guides to aid in the development of the bot.
+Homepage") and [Discord.js documentation](https://discord.js.org/#/docs/main/stable/general/welcome
+"Discord.js documentation") for providing guides to aid in the development of the bot.
 
 ## TODO:
 - Integrate a proper database system to store server, channel and user information (MongoDB, PostgreSQL, etc, I'm still learning)
