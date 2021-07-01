@@ -14,6 +14,8 @@ module.exports = {
             data.push(commands.map((command) => command.name).join('\n'))
             data.push(`You can send \`${prefix}help [command name]\` to get info on a specific command`)
             
+            data.push('\nThis bot was made by Kevin Cai. The code can be found at the following GitHub repository: https://github.com/Kevin-Cai-dev/node-vc-monitor')
+            
             return message.channel.send(data, { split: true })
         }
 
