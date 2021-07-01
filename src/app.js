@@ -79,11 +79,24 @@ client.on('message', (message) => {
     }
     // split up command args on whitespaces
     const msg = message.content.slice(sPrefix.length)
-    const commandName = msg.substr(0, msg.indexOf(' ')).toLowerCase()
-    const args = msg.substr(msg.indexOf(' ') + 1).trim().split(/\s*,\s*(?![^(]*\))/)
+    let len = msg.length
+    if (msg.indexOf(' ') !== -1) {
+        len = msg.indexOf(' ')
+    }
 
-    console.log(args)
-    console.log(commandName)
+    const commandName = msg.substr(0, len).toLowerCase().trim()
+
+    let regex = / +/
+
+    if (commandName === 'subscribe' || commandName === 'unsubscribe') {
+        regex = /\s*,\s*(?![^(]*\))/
+    }
+    
+    let args = msg.substr(len + 1).trim().split(regex)
+
+    if (len === msg.length) {
+        args = []
+    }
 
     // not a registered command of the bot
     if (!client.commands.has(commandName)) {
