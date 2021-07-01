@@ -5,10 +5,8 @@ This project aims to provide a Discord bot which alerts subscribed users wheneve
 Originally designed in python using the discord.py library, I opted to redevelop the bot using Node.js and Discord.js to hopefully incorporate both front-end and back-end features.
 
 Currently, I use a JSON file to store servers, voice channels and user
-subscriptions. I also do not have the bot hosted outside of my local machine.
-
-This is a self-project aimed to both provide a useful service as well as
-allowing me to learn new tools. It is currently hosted by me on Heroku.
+subscriptions. It is currently hosted by me on Heroku. This is a self-project aimed to both provide a useful service as well as
+allowing me to learn new tools. 
 
 WARNING: This bot has not been fully tested and may contain bugs. If you ever want to use it, be careful. Performance across multiple servers has not been tested very thoroughly (since I don't have many servers to test it on) and may produce unexpected results.
 
