@@ -1,22 +1,29 @@
 require('dotenv').config()
-const prefix = process.env.PREFIX
+const fs = require('fs')
 
 module.exports = {
     name: 'help',
     description: 'List all of my commands or info about a specific command',
     uasge: '[command name]',
-    execute(message, args) {
+    execute(message, args, callback) {
         const data = []
         const { commands } = message.client
+        const guild = message.guild
+
+        const storedData = fs.readFileSync('data/database.json')
+        const serverData = JSON.parse(storedData)
+        const server = serverData.find((server) => server.serverID === guild.id)
+        const prefix = server.prefix
 
         if (!args.length) {
             data.push('Here is a list of all available commands:')
             data.push(commands.map((command) => command.name).join('\n'))
             data.push(`You can send \`${prefix}help [command name]\` to get info on a specific command`)
-            
-            data.push('\nThis bot was made by Kevin Cai. The code can be found at the following GitHub repository: https://github.com/Kevin-Cai-dev/node-vc-monitor')
-            
             return message.channel.send(data, { split: true })
+        }
+
+        if (args.length !== 1) {
+            return message.reply('Too many commands specified!')
         }
 
         const name = args[0].toLowerCase()

@@ -30,6 +30,7 @@ const createVC = (vcID) => {
 const createServer = (serverID) => {
     return {
         serverID,
+        prefix,
         vc: []
     }
 }
@@ -67,11 +68,17 @@ client.on('ready', () => {
 
 // event handler to respond to messages/commands
 client.on('message', (message) => {
-    if (!message.content.startsWith(prefix) || message.author.bot) {
+    const guild = message.guild
+    const server = data.find((server) => server.serverID === guild.id)
+    if (!server) {
+        return
+    }
+    const sPrefix = server.prefix
+    if (!message.content.startsWith(sPrefix) || message.author.bot) {
         return
     }
     // split up command args on whitespaces
-    const args = message.content.slice(prefix.length).trim().split(/ +/)
+    const args = message.content.slice(sPrefix.length).trim().split(/ +/)
     const commandName = args.shift().toLowerCase()
 
     // not a registered command of the bot
@@ -90,7 +97,7 @@ client.on('message', (message) => {
     if (command.args && !args.length) {
         let reply = 'Arguments are required!'
         if (command.usage) {
-            reply += `\nThe proper usage would be: \`${prefix}${command.name} ${command.usage}\``
+            reply += `\nThe proper usage would be: \`${sPrefix}${command.name} ${command.usage}\``
         }
         return message.channel.send(reply)
     }
@@ -101,10 +108,12 @@ client.on('message', (message) => {
             if (error) {
                 return message.reply(error)
             }
-            const newBotData = JSON.stringify(rData)
-            fs.writeFileSync('data/database.json', newBotData)
-            data = rData
-            return message.reply(response)
+            if (rData) {
+                const newBotData = JSON.stringify(rData)
+                fs.writeFileSync('data/database.json', newBotData)
+                data = rData
+            }
+            return message.channel.send(response)
         })
     } catch (error) {
         console.error(error)
@@ -129,11 +138,14 @@ client.on('voiceStateUpdate', (oldState, newState) => {
         if (numUsers === 1) {
             const server = data.find((element) => element.serverID === guildID)
             const subscriptions = server.vc.find((channel) => channel.vcID === channelID)
-            // console.log(subscriptions)
             subscriptions.subscribed.forEach((user) => {
                 if (member.id != user) {
                     const receiver = guild.members.cache.get(user)
-                    member.send(`${receiver}, ${member.displayName} joined the voice channel ${newChannel.displayName} in server \'${guild.name}\'!`)                        
+                    try {
+                        member.send(`${receiver}, ${member.displayName} joined the voice channel ${newChannel.displayName} in server \'${guild.name}\'!`)  
+                    } catch (error) {
+                        console.error(error)
+                    }                    
                 }
             })
         }
@@ -146,6 +158,27 @@ client.on('guildCreate', (guild) => {
     console.log(data)
     const newBotData = JSON.stringify(data)
     fs.writeFileSync('data/database.json', newBotData)
+
+    let channelID = undefined
+    const channels = guild.channels.cache.array()
+    console.log(channels)
+
+    for (const key in channels) {
+        const c = channels[key]
+        if (c.type === 'text') {
+            console.log('wow')
+            channelID = c.id;
+            break
+        }
+    }
+
+    if (channelID) {
+        const id = guild.systemChannelID || channelID
+        const channel = channels.find((c) => c.id === id)
+        console.log(channel)
+        channel.send(`Hi, I\'m a bot designed to monitor voice channels. Type \`${prefix}help\` to get started!`)
+    }
+
 })
 
 //event handler for server leaving
