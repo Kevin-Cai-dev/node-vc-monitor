@@ -185,7 +185,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         const numUsers = newChannel.members.array().length
         // no activity previously in the voice channel
         if (numUsers === 1) {
-            console.log('correct')
             // find matching server data
             const server = data.find((element) => element.serverID === guildID)
             // find matching voice channel data
@@ -195,7 +194,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             let allMembers = undefined
             try {
                 allMembers = await guild.members.fetch()
-                console.log(allMembers)
             } catch (e) {
                 return console.error(e)
             }
