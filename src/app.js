@@ -188,8 +188,11 @@ client.on('voiceStateUpdate', (oldState, newState) => {
             subscriptions.subscribed.forEach((user) => {
                 // user is not the same as the user who joined
                 if (member.id !== user) {
+                    console.log(user)
                     const receiver = guild.members.cache.get(user)
-                    console.log(newChannel)
+                    if (!receiver) {
+                        return console.log('receiver is undefined')
+                    }
                     if (recentDM.has(receiver.id)) {
                         return
                     }
