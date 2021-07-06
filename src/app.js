@@ -185,7 +185,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
             // find matching voice channel data
             const subscriptions = server.vc.find((channel) => channel.vcID === channelID)
             // iterate through all subscribed users of the voice channel
-            console.log(guild.members.cache)
+            console.log(guild.members.fetch())
             subscriptions.subscribed.forEach((user) => {
                 // user is not the same as the user who joined
                 if (member.id !== user) {
