@@ -2,7 +2,12 @@ const fs = require('fs')
 require('dotenv').config()
 const Discord = require('discord.js')
 
-const client = new Discord.Client()
+const intents = new Discord.Intents([
+    Discord.Intents.NON_PRIVILEGED,
+    'GUILD_MEMBERS'
+])
+
+const client = new Discord.Client({ ws: { intents } })
 client.commands = new Discord.Collection()
 
 const recentDM = new Set()
@@ -167,7 +172,7 @@ client.on('message', (message) => {
 })
 
 // event handler to monitor users joining voice channels
-client.on('voiceStateUpdate', (oldState, newState) => {
+client.on('voiceStateUpdate', async (oldState, newState) => {
     const guild = newState.guild
     const guildID = newState.guild.id
     const oldChannel = oldState.channel
@@ -180,17 +185,29 @@ client.on('voiceStateUpdate', (oldState, newState) => {
         const numUsers = newChannel.members.array().length
         // no activity previously in the voice channel
         if (numUsers === 1) {
+            console.log('correct')
             // find matching server data
             const server = data.find((element) => element.serverID === guildID)
             // find matching voice channel data
             const subscriptions = server.vc.find((channel) => channel.vcID === channelID)
             // iterate through all subscribed users of the voice channel
-            console.log(guild.members.fetch())
+
+            let allMembers = undefined
+            try {
+                allMembers = await guild.members.fetch()
+                console.log(allMembers)
+            } catch (e) {
+                return console.error(e)
+            }
+
+            if (!allMembers) {
+                return console.log('allMembers is undefined!')
+            }
+
             subscriptions.subscribed.forEach((user) => {
                 // user is not the same as the user who joined
                 if (member.id !== user) {
-                    console.log(user)
-                    const receiver = guild.members.cache.get(user)
+                    const receiver = allMembers.get(user)
                     if (!receiver) {
                         return console.log('receiver is undefined')
                     }
