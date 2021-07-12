@@ -188,7 +188,14 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             // find matching server data
             const server = data.find((element) => element.serverID === guildID)
             // find matching voice channel data
-            const subscriptions = server.vc.find((channel) => channel.vcID === channelID)
+
+            let subscriptions
+            try {
+                subscriptions = await server.vc.find((channel) => channel.vcID === channelID)
+            } catch (e) {
+                return console.error(e)
+            }
+
             // iterate through all subscribed users of the voice channel
 
             let allMembers = undefined
