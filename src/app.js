@@ -209,6 +209,9 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 return console.log('allMembers is undefined!')
             }
 
+            if (!subscriptions) {
+                return console.error('Cannot find voice channels!')
+            }
             subscriptions.subscribed.forEach((user) => {
                 // user is not the same as the user who joined
                 if (member.id !== user) {
