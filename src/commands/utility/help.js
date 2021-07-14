@@ -13,7 +13,7 @@ module.exports = {
         const guild = message.guild
 
         // retrieve JSON data and find matching server + prefix
-        const storedData = fs.readFileSync('data/database.json')
+        const storedData = fs.readFileSync('./src/data/database.json')
         const serverData = JSON.parse(storedData)
         const server = serverData.find((server) => server.serverID === guild.id)
         const prefix = server.prefix

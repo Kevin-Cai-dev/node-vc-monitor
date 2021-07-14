@@ -1,5 +1,6 @@
 const fs = require('fs')
-require('dotenv').config()
+require('dotenv').config({ path: './src/config/dev.env' })
+require('./data/mongoose')
 const Discord = require('discord.js')
 
 const intents = new Discord.Intents([
@@ -13,13 +14,13 @@ client.commands = new Discord.Collection()
 const recentDM = new Set()
 
 // Adding commands to client
-const commandFolders = fs.readdirSync('./commands')
+const commandFolders = fs.readdirSync('./src/commands')
 
 // load commands into client
 for (const folder of commandFolders) {
-    const commandFiles = fs.readdirSync(`./commands/${folder}`).filter((file) => file.endsWith('.js'))
+    const commandFiles = fs.readdirSync(`./src/commands/${folder}`).filter((file) => file.endsWith('.js'))
     for (const file of commandFiles) {
-        const command = require(`../commands/${folder}/${file}`)
+        const command = require(`./commands/${folder}/${file}`)
         client.commands.set(command.name, command)
     }
 }
@@ -27,7 +28,7 @@ for (const folder of commandFolders) {
 const prefix = process.env.PREFIX;
 
 // load JSON data
-const JSONData = fs.readFileSync('data/database.json')
+const JSONData = fs.readFileSync('./src/data/database.json')
 let data = JSON.parse(JSONData)
 
 // helper function to create voice channel object for JSON data
@@ -71,8 +72,11 @@ const updateDatabase = () => {
     }
     data = newData
     const newBotData = JSON.stringify(newData)
-    fs.writeFileSync('data/database.json', newBotData)
+    fs.writeFileSync('./src/data/database.json', newBotData)
 }
+
+
+
 
 // start up Discord bot
 client.on('ready', () => {
@@ -160,7 +164,7 @@ client.on('message', (message) => {
             }
             if (rData) {
                 const newBotData = JSON.stringify(rData)
-                fs.writeFileSync('data/database.json', newBotData)
+                fs.writeFileSync('./src/data/database.json', newBotData)
                 data = rData
             }
             return message.channel.send(response)
@@ -244,7 +248,7 @@ client.on('guildCreate', (guild) => {
     createData(guild.id, data)
     console.log(data)
     const newBotData = JSON.stringify(data)
-    fs.writeFileSync('data/database.json', newBotData)
+    fs.writeFileSync('./data/database.json', newBotData)
 
     let channelID = undefined
     const channels = guild.channels.cache.array()
@@ -274,7 +278,7 @@ client.on('guildDelete', (guild) => {
     const newData = data.filter((obj) => obj.serverID !== guildID)
     data = newData
     const newBotData = JSON.stringify(data)
-    fs.writeFileSync('data/database.json', newBotData)
+    fs.writeFileSync('./data/database.json', newBotData)
 })
 
 client.login(process.env.TOKEN)

@@ -8,6 +8,7 @@ module.exports = {
     name: 'reload',
     description: 'reloads a command',
     args: true,
+    usage: '[command name]',
     execute(message, args, callback) {
         if (!args.length) {
             callback('No arguments provided!')
@@ -19,8 +20,8 @@ module.exports = {
             callback(`There is no command with name or alias \`${commandName}\`.`)
         }
 
-        const commandFolders = fs.readdirSync('./commands')
-        const folderName = commandFolders.find((folder) => fs.readdirSync(`./commands/${folder}`).includes(`${command.name}.js`))
+        const commandFolders = fs.readdirSync('./src/commands')
+        const folderName = commandFolders.find((folder) => fs.readdirSync(`./src/commands/${folder}`).includes(`${command.name}.js`))
         
         delete require.cache[require.resolve(`../${folderName}/${command.name}.js`)]
         

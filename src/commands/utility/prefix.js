@@ -8,7 +8,7 @@ module.exports = {
     guildOnly: true,
     execute(message, args, callback) {
         // load JSON data
-        const buffer = fs.readFileSync('data/database.json')
+        const buffer = fs.readFileSync('./src/data/database.json')
         const data = JSON.parse(buffer)
 
         // find matching server data + prefix
