@@ -1,6 +1,6 @@
 const fs = require('fs')
 require('dotenv').config({ path: './src/config/dev.env' })
-require('./data/mongoose')
+// require('./data/mongoose')
 const Discord = require('discord.js')
 
 const intents = new Discord.Intents([
