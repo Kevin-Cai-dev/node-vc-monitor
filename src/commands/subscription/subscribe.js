@@ -1,5 +1,7 @@
 const fs = require('fs')
 const stringSimilarity = require('string-similarity')
+const Server = require('../../models/server')
+const VC = require('../../models/vc')
 
 module.exports = {
     name: 'subscribe',
@@ -8,14 +10,11 @@ module.exports = {
     usage: '<channelName1,channelName2 ... | all>',
     guildOnly: true,
     aliases: ['sub', 's'],
-    execute(message, args, callback) {
-        // load in stored data
-        const JSONData = fs.readFileSync('./src/data/database.json')
-        const newData = JSON.parse(JSONData)
+    async execute(message, args, callback) {
         const guild = message.guild
         const member = message.member
-        // find matching server in data
-        const server = newData.find((element) => element.serverID === guild.id)
+
+        const server = await Server.findOne({ serverID: guild.id }).populate('voiceChannels')
         // extract all voice channels in server
         const vcAll = guild.channels.cache.filter((channel) => channel.type === 'voice')
         const vcNames = vcAll.map((vc) => vc.name.toLowerCase())
@@ -24,12 +23,18 @@ module.exports = {
 
         // 'all' arg specified, attempting to subscribe to all voice channels
         if (args[0] === 'all' && args.length === 1) {
-            server.vc.forEach((channel) => {
-                const exists = channel.subscribed.some((uid) => uid === member.id)
-                const vcChannel = guild.channels.cache.get(channel.vcID)
 
-                if (!exists && vcChannel.permissionsFor(member).has('VIEW_CHANNEL')) {
-                    channel.subscribed.push(member.id)
+            const voiceChannels = server.voiceChannels
+
+            voiceChannels.forEach(async (channel) => {
+                const exists = channel.subs.some(uid => uid === member.id)
+                const discChannel = guild.channels.cache.get(channel.vcID)
+                if (!exists && discChannel.permissionsFor(member).has('VIEW_CHANNEL')) {
+                    // channel.update( { $push: { subs: member.id } })
+                    await VC.updateOne(
+                        { vcID: channel.vcID },
+                        { $push: { subs: member.id } }
+                    )
                 }
             })
         } 
@@ -48,34 +53,29 @@ module.exports = {
                     break
                 }
                 
-                // finding matching voice channel data entry
-                const found = server.vc.find((channel) => channel.vcID === vc.id)
-                if (!found) {
+                const voiceChannelData = await VC.findOne({ vcID: vc.id })
+                if (!voiceChannelData) {
                     error = 'Could not find channel(s)'
                     break
                 }
 
-                const exists = found.subscribed.some((uid) => uid === member.id)
-                const vcChannel = guild.channels.cache.get(found.vcID)
-
-                if (exists) {
-                    continue
+                const exists = voiceChannelData.subs.some(uid => uid === member.id)
+                
+                if (!exists) {
+                    if (vc.permissionsFor(member).has('VIEW_CHANNEL')) {
+                        voiceChannelData.subs.push(member.id)
+                        await voiceChannelData.save()
+                    } else {
+                        error = 'Could not find channel(s)'
+                    }
                 }
-
-                if (vcChannel.permissionsFor(member).has('VIEW_CHANNEL')) {
-                    // add member to subscription list
-                    found.subscribed.push(member.id)
-                } else {
-                    error = 'Could not find channel(s)'
-                }
-
             }
         }
 
         if (error) {
             callback(error)
         } else {
-            callback(undefined, response, newData)
+            callback(undefined, response)
         }
     }
 }

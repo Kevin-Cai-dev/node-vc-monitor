@@ -1,12 +1,12 @@
-require('dotenv').config()
 const fs = require('fs')
+const Server = require('../../models/server')
 
 module.exports = {
     name: 'help',
     description: 'List all of my commands or info about a specific command',
     uasge: '[command name]',
     guildOnly: true,
-    execute(message, args, callback) {
+    async execute(message, args, callback) {
 
         const data = []
         const { commands } = message.client
@@ -15,7 +15,7 @@ module.exports = {
         // retrieve JSON data and find matching server + prefix
         const storedData = fs.readFileSync('./src/data/database.json')
         const serverData = JSON.parse(storedData)
-        const server = serverData.find((server) => server.serverID === guild.id)
+        const server = await Server.findOne({ serverID: guild.id })
         const prefix = server.prefix
 
         // no args provided
