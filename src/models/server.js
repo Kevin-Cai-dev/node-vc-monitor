@@ -5,16 +5,17 @@ const serverSchema = new mongoose.Schema({
     serverID: {
         type: String,
         required: true
-    }
+    },
+    voiceChannels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'VC' }]
 })
 
-serverSchema.virtual('tasks', {
-    ref: 'VC',
-    localField: '_id',
-    foreignField: 'owner'
-})
+// serverSchema.virtual('tasks', {
+//     ref: 'VC',
+//     localField: '_id',
+//     foreignField: 'owner'
+// })
 
-serverSchema.pre('remove', async function(next) {
+serverSchema.pre('deleteOne', async function(next) {
     await VC.deleteMany({ owner: this._id })
     next()
 })
