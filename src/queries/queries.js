@@ -48,7 +48,7 @@ const findAndDeleteChannel = async (channel) => {
 // remove channel from database along with reference
 const deleteChannelFromDb = async (serverID, del) => {
     try {
-        await Server.UpdateOne({ serverID }, {$pull: { voiceChannels: del._id} })
+        await Server.updateOne({ serverID }, {$pull: { voiceChannels: del._id} })
         await del.remove()
     } catch (e) {
         console.error(e)
