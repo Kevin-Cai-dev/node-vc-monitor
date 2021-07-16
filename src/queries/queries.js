@@ -1,18 +1,24 @@
 const Server = require('../models/server')
 const VC = require('../models/vc')
 
+// Adds voice channel to database, adds reference to parent server
 const addChannelToDb = (vcID, server, guildId) => {
-    const newVC = VC({ vcID, owner: server})
+    const newVC = VC({ vcID, owner: server })
     newVC.save(async () => {
-        await Server.updateOne(
-            { serverID: guildId},
-            { $push: { voiceChannels: newVC } }
-        )
+        try {
+            await Server.updateOne(
+                { serverID: guildId},
+                { $push: { voiceChannels: newVC } }
+            )
+        } catch (e) {
+            console.error(e)
+        }
     })
 }
 
+// add server and voice channels to database
 const saveServerToDb = (guild) => {
-    // save the server
+    // create new server document
     const server = new Server({ serverID: guild.id })
     server.save()
 
@@ -23,71 +29,113 @@ const saveServerToDb = (guild) => {
     })
 }
 
+// remove server and children channels from database
+const deleteServerFromDb = async (ids) => {
+    try { 
+        await Server.deleteOne({ serverID: { $in: ids } })
+    } catch (e) {
+        console.error(e)
+    }
+}
+
+// find VC document before removing
+const findAndDeleteChannel = async (channel) => {
+    const serverID = channel.guild.id
+    const del = await VC.findOne({ vcID: channel.id })
+    deleteChannelFromDb(serverID, del)
+}
+
+// remove channel from database along with reference
+const deleteChannelFromDb = async (serverID, del) => {
+    try {
+        await Server.UpdateOne({ serverID }, {$pull: { voiceChannels: del._id} })
+        await del.remove()
+    } catch (e) {
+        console.error(e)
+    }
+}
+
 // update database upon launching
 const updateDatabase = async (client) => {
     const guilds = client.guilds.cache.array()
     const guildIds = guilds.map(server => server.id)
 
     // delete guilds which the bot is no longer part of
-    await Server.deleteMany({ serverID: { $nin: guildIds } })
-
-
+    try { 
+        await Server.deleteMany({ serverID: { $nin: guildIds } })
+    } catch (e) {
+        console.error(e)
+    }
+    
     // get all saved servers in database
-    const saved = await Server.find({ serverID: { $in: guildIds } })
+    let saved
+    try {
+        saved = await Server.find({ serverID: { $in: guildIds } }).populate('voiceChannels')
+    } catch (e) {
+        console.error(e)
+    }
+    
     // extract all ids of saved servers
     const savedServerIds = saved.map(server => server.serverID)
-    // get all server objects from Discord API matching database entries
+
+
+    // get all servers which are currently tracked in database
     const currentServers = guilds.filter(server => savedServerIds.includes(server.id))
+    // get all servers which are not currently tracked in database
+    const newServers = guilds.filter(server => !savedServerIds.includes(server.id))
     
-    // loop over all current servers that are stored in database
-    currentServers.forEach(async (guild) => {
 
-        const server = await Server.findOne({ serverID: guild.id })
+    saved.forEach(async (server) => {
+        const serverID = server.serverID
+        // get ids for all voice channels in server from Discord API
+        const voiceChannelIds = currentServers.find(s => s.id === serverID).channels.cache.array().filter(voice => voice.type === 'voice').map(vc => vc.id)
 
-        // get ids for all voice channels in server
-        const voiceChannelIds = guild.channels.cache.array().filter(voice => voice.type === 'voice').map(vc => vc.id)
+        // get all VC documents from database
+        const currentVC = server.voiceChannels
 
-        // get currently stored voice channels for matching server
-        const currentVC = await Server.findOne({ serverID: guild.id }).populate('voiceChannels')
-
-        const currentVCIds = currentVC.voiceChannels.map(vc => vc.vcID)
-
-        const toDelete = currentVCIds.filter(id => !voiceChannelIds.includes(id))
-        const toAdd = voiceChannelIds.filter(id => !currentVCIds.includes(id))
-        // delete voice channels that do not exist
-
-        toDelete.forEach(async del => {
-            const dbID = await VC.findOne({ vcID: del }, '_id')
-            await Server.findOneAndUpdate({ serverID: guild.id }, {$pull: { voiceChannels: dbID._id} })
-        })
-        await VC.deleteMany({ vcID: { $in: toDelete } })
+        // filter out documents which no longer match up to a valid voice channel
+        const toDelete = currentVC.filter(id => !voiceChannelIds.includes(id.vcID))
         
+        // filter out IDs of new channels which must be added to database
+        const toAdd = voiceChannelIds.filter(id => !currentVC.map(vc => vc.vcID).includes(id))
 
+        // delete invalid VC documents and update server reference
+        toDelete.forEach(async del => {
+            deleteChannelFromDb(serverID, del)
+        })
+
+        // create new VC documents for new channels
         toAdd.forEach(async add => {
-            addChannelToDb(add, server, guild.id)
+            addChannelToDb(add, server, serverID)
         })
     })
 
-    // add guilds which the bot is part of, but is not in the database
-    const newServers = guilds.filter(server => !savedServerIds.includes(server.id))
+    // Add new servers to database alongside their voice channels
     newServers.forEach(guild => {
         saveServerToDb(guild)
     })
 }
 
 
-
+// process command and execute matching command
 const handleCommand = async (client, message) => {
     let sPrefix = undefined
     let server = undefined
     const guild = message.guild
+    if (!guild.available) {
+        return
+    }
 
     // message was from dm, use default prefix
     if (!guild) {
         sPrefix = process.env.PREFIX
     } else {
-        server = await Server.findOne({ serverID: guild.id })
-
+        try {
+            server = await Server.findOne({ serverID: guild.id })
+        } catch (e) {
+            console.error(e)
+        }
+    
         if (!server) {
             return
         }
@@ -147,14 +195,9 @@ const handleCommand = async (client, message) => {
 
     // execute the command
     try {
-        command.execute(message, args, (error, response, rData) => {
+        command.execute(message, args, (error, response) => {
             if (error) {
                 return message.reply(error)
-            }
-            if (rData) {
-                const newBotData = JSON.stringify(rData)
-                fs.writeFileSync('./src/data/database.json', newBotData)
-                data = rData
             }
             return message.channel.send(response)
         })
@@ -164,9 +207,15 @@ const handleCommand = async (client, message) => {
     }
 }
 
+// send ping to all subscribed members
 const pingUsers = async (guild, newChannel, member, recentDM) => {
-
-    const voiceChannel = await VC.findOne({ vcID: newChannel.id })
+    let voiceChannel
+    try {
+        voiceChannel = await VC.findOne({ vcID: newChannel.id })
+    } catch (e) {
+        console.error(e)
+    }
+    
 
     if (!voiceChannel) {
         return console.error('Could not read voice channel data!')
@@ -192,7 +241,6 @@ const pingUsers = async (guild, newChannel, member, recentDM) => {
             if (recentDM.has(receiver.id)) {
                 return
             }
-
             try {
                 receiver.send(`${receiver}, ${member.displayName} joined the voice channel ${newChannel.name} in server \'${guild.name}\'!`)
                 recentDM.add(receiver.id)
@@ -206,8 +254,23 @@ const pingUsers = async (guild, newChannel, member, recentDM) => {
     })
 }
 
+// remove user subscriptions from all voice channels in server
+const removeUserSubscriptions = async (server, user) => {
+    const serverData = await Server.findOne({ serverID: server.id }).populate('voiceChannels')
+    serverData.voiceChannels.forEach(async (channel) => {
+        const index = channel.subs.indexOf(user.id)
+        channel.subs.splice(index, 1);
+        await channel.save()
+    })
+}
+
 module.exports = {
     updateDatabase,
     handleCommand,
-    pingUsers
+    pingUsers,
+    saveServerToDb,
+    deleteServerFromDb,
+    addChannelToDb,
+    findAndDeleteChannel,
+    removeUserSubscriptions
 }

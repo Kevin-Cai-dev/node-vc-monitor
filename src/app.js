@@ -2,11 +2,20 @@ const fs = require('fs')
 require('dotenv').config({ path: './src/config/dev.env' })
 require('./data/mongoose')
 const Discord = require('discord.js')
-const { updateDatabase, handleCommand, pingUsers } = require('./queries/queries')
+const { updateDatabase, 
+    handleCommand, 
+    pingUsers, 
+    saveServerToDb, 
+    deleteServerFromDb,
+    addChannelToDb,
+    findAndDeleteChannel,
+    removeUserSubscriptions
+ } = require('./queries/queries')
 
 const intents = new Discord.Intents([
     Discord.Intents.NON_PRIVILEGED,
-    'GUILD_MEMBERS'
+    'GUILD_MEMBERS',
+    'GUILDS'
 ])
 
 const client = new Discord.Client({ ws: { intents } })
@@ -25,10 +34,6 @@ for (const folder of commandFolders) {
         client.commands.set(command.name, command)
     }
 }
-// retrieve default prefix
-const prefix = process.env.PREFIX;
-
-
 
 
 // start up Discord bot
@@ -54,6 +59,10 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     const newChannel = newState.channel
     const member = newState.member
 
+    if (!guild.available) {
+        return
+    }
+
     // a new user has joined an empty voice channel
     if (!oldChannel && newChannel) {
         const numUsers = newChannel.members.array().length
@@ -64,45 +73,60 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     }
 })
 
-// // event handler for server joining
-// client.on('guildCreate', (guild) => {
-//     createData(guild.id, data)
-//     console.log(data)
-//     const newBotData = JSON.stringify(data)
-//     fs.writeFileSync('./data/database.json', newBotData)
+// event handler for server joining
+client.on('guildCreate', (guild) => {
 
-//     let channelID = undefined
-//     const channels = guild.channels.cache.array()
+    saveServerToDb(guild)
 
-//     // find the first text channel in the server
-//     for (const key in channels) {
-//         const c = channels[key]
-//         if (c.type === 'text') {
-//             channelID = c.id;
-//             break
-//         }
-//     }
+    let channelID = undefined
+    const channels = guild.channels.cache.array()
 
-//     if (channelID) {
-//         // locate either the systemChannel or the first text channel
-//         const id = guild.systemChannelID || channelID
-//         const channel = channels.find((c) => c.id === id)
-//         // send an introduction message to the server
-//         channel.send(`Hi, I\'m a bot designed to monitor voice channels. Type \`${prefix}help\` to get started!`)
-//     }
+    // find the first text channel in the server
+    for (const key in channels) {
+        const c = channels[key]
+        if (c.type === 'text') {
+            channelID = c.id;
+            break
+        }
+    }
 
-// })
+    if (channelID) {
+        // locate either the systemChannel or the first text channel
+        const id = guild.systemChannelID || channelID
+        const channel = channels.find((c) => c.id === id)
+        // send an introduction message to the server
+        channel.send(`Hi, I\'m a bot designed to monitor voice channels. Type \`${process.env.PREFIX}help\` to get started!`)
+    }
 
-// //event handler for server leaving, removes server from database
-// client.on('guildDelete', (guild) => {
-//     const guildID = guild.id
-//     const newData = data.filter((obj) => obj.serverID !== guildID)
-//     data = newData
-//     const newBotData = JSON.stringify(data)
-//     fs.writeFileSync('./data/database.json', newBotData)
-// })
+})
 
-// TODO:
-// channel add, channel delete, user leave
+//event handler for server leaving, removes server from database
+client.on('guildDelete', (guild) => {
+    const guildID = guild.id
+    deleteServerFromDb(guildID)
+})
+
+// add new channel to database
+client.on('channelCreate', (channel) => {
+    if (!channel.type === 'voice') {
+        return
+    }
+    const guild = channel.guild
+    addChannelToDb(channel.id, guild, guild.id)
+})
+
+// remove channel and references from database
+client.on('channelDelete', (channel) => {
+    findAndDeleteChannel(channel)
+})
+
+// remove users from subscribed channels
+client.on('guildMemberRemove', (member) => {
+    if (member.user.bot) {
+        return
+    }
+    const guild = member.guild
+    removeUserSubscriptions(guild, member)
+})
 
 client.login(process.env.TOKEN)

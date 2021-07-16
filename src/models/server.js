@@ -34,7 +34,7 @@ serverSchema.pre('deleteMany', async function(next) {
 
 serverSchema.post('updateOne', function(error, doc, next) {
     if (error) {
-        next(error)
+        next(new Error('Could not update server details'))
     } else {
         next()
     }
@@ -42,7 +42,7 @@ serverSchema.post('updateOne', function(error, doc, next) {
 
 serverSchema.post('deleteMany', function(error, doc, next) {
     if (error) {
-        next(error)
+        next(new Error('Could not delete multiple servers'))
     } else {
         next()
     }
@@ -50,7 +50,7 @@ serverSchema.post('deleteMany', function(error, doc, next) {
 
 serverSchema.post('find', function(error, doc, next) {
     if (error) {
-        next( new Error('This is an error!'))
+        next(new Error('Could not find server'))
     } else {
         next()
     }
