@@ -6,16 +6,18 @@ module.exports = {
     description: 'List all of my commands or info about a specific command',
     uasge: '[command name]',
     guildOnly: true,
-    async execute(message, args, callback) {
+    async execute(message, args) {
 
         const data = []
         const { commands } = message.client
         const guild = message.guild
 
-        // retrieve JSON data and find matching server + prefix
-        const storedData = fs.readFileSync('./src/data/database.json')
-        const serverData = JSON.parse(storedData)
-        const server = await Server.findOne({ serverID: guild.id })
+        let server
+        try {
+            server = await Server.findOne({ serverID: guild.id })
+        } catch (e) {
+            console.error(e)
+        }
         const prefix = server.prefix
 
         // no args provided

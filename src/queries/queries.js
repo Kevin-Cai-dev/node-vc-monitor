@@ -256,7 +256,15 @@ const pingUsers = async (guild, newChannel, member, recentDM) => {
 
 // remove user subscriptions from all voice channels in server
 const removeUserSubscriptions = async (server, user) => {
-    const serverData = await Server.findOne({ serverID: server.id }).populate('voiceChannels')
+    let serverData
+    try {
+        serverData = await Server.findOne({ serverID: server.id }).populate('voiceChannels')
+    } catch (e) {
+        console.error(e)
+    }
+    if (!serverData) {
+        return console.log('Cannot find server for removed user!')
+    }
     serverData.voiceChannels.forEach(async (channel) => {
         const index = channel.subs.indexOf(user.id)
         channel.subs.splice(index, 1);
