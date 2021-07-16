@@ -18,7 +18,7 @@ module.exports = {
         const vcAll = guild.channels.cache.filter((channel) => channel.type === 'voice')
         const vcNames = vcAll.map((vc) => vc.name.toLowerCase())
 
-        let error = undefined
+        let error = 'Could not unsubscribe from channels: '
         let response = 'Unsubscribed successfully!'
 
         // 'all' arg specified, unsub to all voice channels in the server
@@ -38,20 +38,25 @@ module.exports = {
 
                 // finding the best matching voice channel name based on args
                 const { bestMatch } = stringSimilarity.findBestMatch(args[i], vcNames)
+                
+                if (bestMatch.rating < 0.1) {
+                    error += `${args[i]},`
+                    continue
+                }
 
                 // finding voice channel matching given name
                 const vc = vcAll.find((channel) => channel.name.toLowerCase() === bestMatch.target)
                 
                 if (!vc) {
-                    error = 'Could not find channel(s)'
-                    break
+                    error += `${args[i]},`
+                    continue
                 }
 
                 const voiceChannelData = await VC.findOne({ vcID: vc.id })
                 // finding matching voice channel data entry
                 if (!voiceChannelData) {
-                    error = 'Could not find channel(s)'
-                    break
+                    error += `${args[i]},`
+                    continue
                 }
 
                 const index = voiceChannelData.subs.indexOf(member.id)
@@ -60,10 +65,12 @@ module.exports = {
             }
         }
 
-        if (error) {
-            callback(error)
-        } else {
+        const lastChar = error.charAt(error.length - 1)
+        error = error.slice(0, -1)
+        if (lastChar === ' ') {
             callback(undefined, response)
+        } else {
+            callback(error)
         }
     }
 }
