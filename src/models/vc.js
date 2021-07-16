@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const Server = require('../models/server')
 
 const vcSchema = new mongoose.Schema({
     vcID: {
