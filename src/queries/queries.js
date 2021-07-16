@@ -3,7 +3,7 @@ const VC = require('../models/vc')
 
 // Adds voice channel to database, adds reference to parent server
 const addChannelToDb = (vcID, server, guildId) => {
-    const newVC = VC({ vcID, owner: server })
+    const newVC = new VC({ vcID, owner: server })
     newVC.save(async () => {
         try {
             await Server.updateOne(
