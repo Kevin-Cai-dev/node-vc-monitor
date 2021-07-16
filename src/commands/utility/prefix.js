@@ -9,14 +9,15 @@ module.exports = {
     usage: '<prefix>',
     guildOnly: true,
     async execute(message, args, callback) {
-        // load JSON data
-        const buffer = fs.readFileSync('./src/data/database.json')
-        const data = JSON.parse(buffer)
-
         // find matching server data + prefix
         const guild = message.guild
 
-        const server = Server.findOne({ serverID: guild.id })
+        let server
+        try {
+            server = await Server.findOne({ serverID: guild.id })
+        } catch (e) {
+            console.error(e)
+        }
         const prefix = server.prefix
 
         // regex pattern to test for special characters
