@@ -18,7 +18,7 @@ module.exports = {
         // extract all voice channels in server
         const vcAll = guild.channels.cache.filter((channel) => channel.type === 'voice')
         const vcNames = vcAll.map((vc) => vc.name.toLowerCase())
-        let error = undefined
+        let error = 'Could not find channel(s): '
         let response = 'Successfully subscribed!'
 
         // 'all' arg specified, attempting to subscribe to all voice channels
@@ -30,7 +30,6 @@ module.exports = {
                 const exists = channel.subs.some(uid => uid === member.id)
                 const discChannel = guild.channels.cache.get(channel.vcID)
                 if (!exists && discChannel.permissionsFor(member).has('VIEW_CHANNEL')) {
-                    // channel.update( { $push: { subs: member.id } })
                     await VC.updateOne(
                         { vcID: channel.vcID },
                         { $push: { subs: member.id } }
@@ -45,18 +44,23 @@ module.exports = {
 
                 // finding the best matching voice channel name based on args
                 const { bestMatch } = stringSimilarity.findBestMatch(args[i], vcNames)
+                
+                if (bestMatch.rating < 0.1) {
+                    error += `${args[i]},`
+                    continue
+                }
 
                 // finding voice channel
                 const vc = vcAll.find((channel) => channel.name.toLowerCase() === bestMatch.target)
                 if (!vc) {
-                    error = 'Could not find channel(s)'
-                    break
+                    error += `${args[i]},`
+                    continue
                 }
                 
                 const voiceChannelData = await VC.findOne({ vcID: vc.id })
                 if (!voiceChannelData) {
-                    error = 'Could not find channel(s)'
-                    break
+                    error += `${args[i]},`
+                    continue
                 }
 
                 const exists = voiceChannelData.subs.some(uid => uid === member.id)
@@ -66,16 +70,18 @@ module.exports = {
                         voiceChannelData.subs.push(member.id)
                         await voiceChannelData.save()
                     } else {
-                        error = 'Could not find channel(s)'
+                        error += `${args[i]},`
                     }
                 }
             }
         }
 
-        if (error) {
-            callback(error)
-        } else {
+        const lastChar = error.charAt(error.length - 1)
+        error = error.slice(0, -1)
+        if (lastChar === ' ') {
             callback(undefined, response)
+        } else {
+            callback(error)
         }
     }
 }
