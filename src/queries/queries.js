@@ -169,12 +169,7 @@ const handleCommand = async (client, message) => {
     // get command name
     const commandName = msg.substr(0, len).toLowerCase().trim()
 
-    let regex = / +/
-
-    // change regex split pattern for subscription commands, split on commas
-    if (commandName === 'subscribe' || commandName === 'unsubscribe') {
-        regex = /\s*,\s*(?![^(]*\))/
-    }
+    const regex = / +/
     
     let args = msg.substr(len + 1).trim().split(regex)
 
