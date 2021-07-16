@@ -7,7 +7,7 @@ const { updateDatabase,
     pingUsers, 
     saveServerToDb, 
     deleteServerFromDb,
-    addChannelToDb,
+    addNewChannel,
     findAndDeleteChannel,
     removeUserSubscriptions
  } = require('./queries/queries')
@@ -112,7 +112,7 @@ client.on('channelCreate', (channel) => {
         return
     }
     const guild = channel.guild
-    addChannelToDb(channel.id, guild, guild.id)
+    addNewChannel(channel.id, guild)
 })
 
 // remove channel and references from database

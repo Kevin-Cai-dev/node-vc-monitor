@@ -1,13 +1,25 @@
 const Server = require('../models/server')
 const VC = require('../models/vc')
 
+const addNewChannel = async (vcID, guild) => {
+    let server
+    try {
+        server = await Server.findOne({ serverID: guild.id })
+    } catch (e) {
+        console.error(e)
+    }
+
+    addChannelToDb(vcID, server, guild.id)
+    
+}
+
 // Adds voice channel to database, adds reference to parent server
 const addChannelToDb = (vcID, server, guildId) => {
     const newVC = new VC({ vcID, owner: server })
     newVC.save(async () => {
         try {
             await Server.updateOne(
-                { serverID: guildId},
+                { serverID: guildId },
                 { $push: { voiceChannels: newVC } }
             )
         } catch (e) {
@@ -23,8 +35,8 @@ const saveServerToDb = (guild) => {
     server.save()
 
     // loop through all voice channels, save them and add references
-    const voicehannels = guild.channels.cache.array().filter(voice => voice.type === 'voice')
-    voicehannels.forEach(channel => {
+    const voicechannels = guild.channels.cache.array().filter(voice => voice.type === 'voice')
+    voicechannels.forEach(channel => {
         addChannelToDb(channel.id, server, guild.id)
     })
 }
@@ -278,7 +290,7 @@ module.exports = {
     pingUsers,
     saveServerToDb,
     deleteServerFromDb,
-    addChannelToDb,
+    addNewChannel,
     findAndDeleteChannel,
     removeUserSubscriptions
 }
