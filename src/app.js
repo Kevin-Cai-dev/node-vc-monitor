@@ -108,7 +108,7 @@ client.on('guildDelete', (guild) => {
 
 // add new channel to database
 client.on('channelCreate', (channel) => {
-    if (!channel.type === 'voice') {
+    if (!(channel.type === 'voice')) {
         return
     }
     const guild = channel.guild
