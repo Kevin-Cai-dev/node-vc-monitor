@@ -102,4 +102,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 //     fs.writeFileSync('./data/database.json', newBotData)
 // })
 
+// TODO:
+// channel add, channel delete, user leave
+
 client.login(process.env.TOKEN)

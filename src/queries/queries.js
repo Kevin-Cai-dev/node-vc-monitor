@@ -61,6 +61,7 @@ const updateDatabase = async (client) => {
             await Server.findOneAndUpdate({ serverID: guild.id }, {$pull: { voiceChannels: dbID._id} })
         })
         await VC.deleteMany({ vcID: { $in: toDelete } })
+        
 
         toAdd.forEach(async add => {
             addChannelToDb(add, server, guild.id)
@@ -86,6 +87,7 @@ const handleCommand = async (client, message) => {
         sPrefix = process.env.PREFIX
     } else {
         server = await Server.findOne({ serverID: guild.id })
+
         if (!server) {
             return
         }
@@ -163,7 +165,9 @@ const handleCommand = async (client, message) => {
 }
 
 const pingUsers = async (guild, newChannel, member, recentDM) => {
+
     const voiceChannel = await VC.findOne({ vcID: newChannel.id })
+
     if (!voiceChannel) {
         return console.error('Could not read voice channel data!')
     }

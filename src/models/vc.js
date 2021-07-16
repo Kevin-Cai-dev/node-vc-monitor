@@ -13,24 +13,21 @@ const vcSchema = new mongoose.Schema({
     }
 })
 
-// vcSchema.pre('deleteMany', async function(next) {
-//     // delete vc id from parent server voiceChannel array
-//     const deletedData = await VC.find(this._conditions)
-//     if (deletedData.length !== 0) {
-//         const deletedID = deletedData.map(data => data.vcID)
-//         const owner = deletedData[0].owner
-//         await Server.update(
-//             { _id: owner },
-//             {$pull: {voiceChannels: { $in: deletedID } } }
-//         )
-//     }
-//     next()
-// })
+vcSchema.post('findOne', function(error, doc, next) {
+    if (error) {
+        next(error)
+    } else {
+        next()
+    }
+})
 
-// vcSchema.pre('deleteOne', async function(next) {
-//     // similar to deleteMany, just with one channel
-//     next()
-// })
+vcSchema.post('deleteMany', function(error, doc, next) {
+    if (error) {
+        next(error)
+    } else {
+        next()
+    }
+})
 
 const VC = mongoose.model('VC', vcSchema)
 

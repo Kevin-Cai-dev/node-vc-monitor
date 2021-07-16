@@ -15,11 +15,6 @@ const serverSchema = new mongoose.Schema({
     voiceChannels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'VC' }]
 })
 
-// serverSchema.virtual('tasks', {
-//     ref: 'VC',
-//     localField: '_id',
-//     foreignField: 'owner'
-// })
 
 serverSchema.pre('deleteOne', async function(next) {
     await VC.deleteMany({ owner: this._id })
@@ -35,6 +30,30 @@ serverSchema.pre('deleteMany', async function(next) {
         })
     }
     next()
+})
+
+serverSchema.post('updateOne', function(error, doc, next) {
+    if (error) {
+        next(error)
+    } else {
+        next()
+    }
+})
+
+serverSchema.post('deleteMany', function(error, doc, next) {
+    if (error) {
+        next(error)
+    } else {
+        next()
+    }
+})
+
+serverSchema.post('find', function(error, doc, next) {
+    if (error) {
+        next( new Error('This is an error!'))
+    } else {
+        next()
+    }
 })
 
 const Server = mongoose.model('Server', serverSchema)
