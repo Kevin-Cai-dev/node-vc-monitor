@@ -23,4 +23,9 @@ Originally designed in python using the discord.py library, I opted to redevelop
 Currently, I use a MongoDB database to store servers, voice channels and user subscriptions. It is currently hosted by me on Heroku. This is a self-project aimed to both provide a useful service as well as
 allowing me to learn new tools.
 
-
+### Future Feature Suggestions
+- Auto sub command, which automatically subscribes users to new channels
+- mod commands to restrict which channels are subbable to, sub other users to
+  specific channels
+- separate current sub command into two, one for subbing to all and one for
+  subbing to specific channels
