@@ -24,30 +24,14 @@ module.exports = {
     let error = "Could not find channel(s): ";
     let response = "Successfully subscribed!";
 
-    // 'all' arg specified, attempting to subscribe to all voice channels
-    // if (args[0] === "all" && args.length === 1) {
-    //   const voiceChannels = server.voiceChannels;
-
-    //   voiceChannels.forEach(async (channel) => {
-    //     const exists = channel.subs.some((uid) => uid === member.id);
-    //     const discChannel = guild.channels.cache.get(channel.vcID);
-    //     if (!exists && discChannel.permissionsFor(member).has("VIEW_CHANNEL")) {
-    //       await VC.updateOne(
-    //         { vcID: channel.vcID },
-    //         { $push: { subs: member.id } }
-    //       );
-    //     }
-    //   });
-    // }
     // attempt to subscribe to all specified channel names
-    // else {
     for (let i = 0; i < args.length; i++) {
       args[i] = args[i].trim();
 
       // finding the best matching voice channel name based on args
       const { bestMatch } = stringSimilarity.findBestMatch(args[i], vcNames);
 
-      if (bestMatch.rating < 0.1) {
+      if (bestMatch.rating < 0.5) {
         error += `${args[i]},`;
         continue;
       }
@@ -78,7 +62,6 @@ module.exports = {
         }
       }
     }
-    // }
 
     const lastChar = error.charAt(error.length - 1);
     error = error.slice(0, -1);
