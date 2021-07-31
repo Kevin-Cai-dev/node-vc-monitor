@@ -1,5 +1,4 @@
 const stringSimilarity = require("string-similarity");
-const Server = require("../../models/server");
 const VC = require("../../models/vc");
 
 module.exports = {
@@ -13,9 +12,6 @@ module.exports = {
     const guild = message.guild;
     const member = message.member;
 
-    const server = await Server.findOne({ serverID: guild.id }).populate(
-      "voiceChannels"
-    );
     // extract all voice channels in server
     const vcAll = guild.channels.cache.filter(
       (channel) => channel.type === "voice"

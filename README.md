@@ -27,5 +27,3 @@ allowing me to learn new tools.
 - Auto sub command, which automatically subscribes users to new channels
 - mod commands to restrict which channels are subbable to, sub other users to
   specific channels
-- separate current sub command into two, one for subbing to all and one for
-  subbing to specific channels
