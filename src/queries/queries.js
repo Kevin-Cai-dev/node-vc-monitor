@@ -44,9 +44,9 @@ const saveServerToDb = async (guild) => {
     addChannelToDb(channel.id, server, guild.id);
   });
 
-  const users = guild.members.fetch();
+  const users = await guild.members.fetch();
   // loop through all users in server, save them and add references
-  addUsers(users, server);
+  addUsers(users.array(), server);
 };
 
 // remove server and children channels from database
@@ -73,40 +73,47 @@ const addUsers = async (users, server) => {
   // extract ids of all users
 
   const newUsers = [];
+  const allUsers = await User.find({});
+  const allUserIDs = allUsers.map((user) => user.userID);
 
   // loop through all users in current server, check if they exist in database
   users.forEach(async (user) => {
-    // if (storedUserIDs.includes(user.id)) {
-    //   const userDoc = storedUsers.find((user) => user.userID === user.id);
-    //   userDoc.count++;
-    //   userDoc.save();
-    // } else {
-    //   newUsers.push(user);
-    // }
-    // const userDoc = await User.findOne({ userID: user.id });
-    // if (!userDoc) {
-    //   newUsers.push(user);
-    //   console.log(newUsers);
-    //   // addNewUser(user, guildDoc);
-    // } else {
-    //   userDoc.count++;
-    //   console.log(userDoc.userID, userDoc.count);
-    //   await userDoc.save();
-    // }
+    if (user.user.bot) {
+      return;
+    } else if (allUserIDs.includes(user.id)) {
+      const userDoc = storedUsers.find((user) => user.userID === user.id);
+      userDoc.count++;
+      await userDoc.save();
+    } else {
+      newUsers.push(user);
+    }
   });
   console.log(newUsers);
-  addNewUsers(newUsers, guildDoc);
+  addNewUsers(newUsers, server.serverID);
 };
 
 // function to create new user document if not found
-const addNewUsers = async (users, server) => {
+const addNewUsers = async (users, serverID) => {
   users.forEach(async (user) => {
     const newUser = new User({ userID: user.id });
-    await newUser.save();
-    server.users.push(newUser);
+    await newUser.save(async () => {
+      await Server.updateOne({ serverID }, { $push: { users: newUser } });
+    });
+    // server.users.push(newUser);
   });
 
-  await server.save();
+  // newVC.save(async () => {
+  //   try {
+  //     await Server.updateOne(
+  //       { serverID: guildId },
+  //       { $push: { voiceChannels: newVC } }
+  //     );
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  // });
+
+  // await server.save();
 };
 
 // remove channel from database along with reference
