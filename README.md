@@ -27,3 +27,25 @@ allowing me to learn new tools.
 - Auto sub command, which automatically subscribes users to new channels
 - mod commands to restrict which channels are subbable to, sub other users to
   specific channels
+
+### TODO
+server has an array of user references CHECK
+
+when adding server, create new vc documents, create new user documents if not in
+database, else increment user servercount by 1
+
+when deleting server, remove vc documents and decrement servercount for all
+users by 1. if servercount == 0, remove user document CHECK
+
+when updating server, consider user join/leave logic
+
+when user leaves, remove reference from server and decrement servercount by 1.
+if servercount == 0, remove user document
+
+when user joins, add reference to server and if user already exists increment
+servercount by 1. else create new user document and add reference
+
+when vc is created, go through all users in server and check for autosub flag.
+if true, add to vc list
+
+modify any checks for vc users to populate and map userID first before operating

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const VC = require("./vc");
+const User = require("./user");
 
 const serverSchema = new mongoose.Schema({
   serverID: {
@@ -13,19 +14,37 @@ const serverSchema = new mongoose.Schema({
     default: process.env.PREFIX,
   },
   voiceChannels: [{ type: mongoose.Schema.Types.ObjectId, ref: "VC" }],
+  users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 
 serverSchema.pre("deleteOne", async function (next) {
   await VC.deleteMany({ owner: this._id });
+  const server = await Server.findOne(this._conditions).populate("User");
+  server.users.forEach(async (user) => {
+    if (user.count == 1) {
+      await user.remove();
+    } else {
+      user.count -= 1;
+      await user.save();
+    }
+  });
   next();
 });
 
 serverSchema.pre("deleteMany", async function (next) {
   // for each server, call VC.deleteMany
-  const deletedData = await Server.find(this._conditions);
+  const deletedData = await Server.find(this._conditions).populate("User");
   if (deletedData.length !== 0) {
     deletedData.forEach(async (del) => {
       await VC.deleteMany({ owner: del._id });
+      del.users.forEach(async (user) => {
+        if (user.count == 1) {
+          await user.remove();
+        } else {
+          user.count -= 1;
+          await user.save();
+        }
+      });
     });
   }
   next();

@@ -7,9 +7,10 @@ const vcSchema = new mongoose.Schema({
   },
   restricted: {
     type: Boolean,
+    required: true,
     default: false,
   },
-  subs: [{ type: String }],
+  subs: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Server",

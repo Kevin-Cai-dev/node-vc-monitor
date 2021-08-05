@@ -1,5 +1,7 @@
+// const { User } = require("discord.js");
 const Server = require("../models/server");
 const VC = require("../models/vc");
+const User = require("../models/user");
 
 const addNewChannel = async (vcID, guild) => {
   let server;
@@ -28,10 +30,11 @@ const addChannelToDb = (vcID, server, guildId) => {
 };
 
 // add server and voice channels to database
-const saveServerToDb = (guild) => {
+const saveServerToDb = async (guild) => {
+  // console.log(guild.id);
   // create new server document
   const server = new Server({ serverID: guild.id });
-  server.save();
+  await server.save();
 
   // loop through all voice channels, save them and add references
   const voicechannels = guild.channels.cache
@@ -40,6 +43,10 @@ const saveServerToDb = (guild) => {
   voicechannels.forEach((channel) => {
     addChannelToDb(channel.id, server, guild.id);
   });
+
+  const users = guild.members.fetch();
+  // loop through all users in server, save them and add references
+  addUsers(users, server);
 };
 
 // remove server and children channels from database
@@ -56,6 +63,50 @@ const findAndDeleteChannel = async (channel) => {
   const serverID = channel.guild.id;
   const del = await VC.findOne({ vcID: channel.id });
   deleteChannelFromDb(serverID, del);
+};
+
+// users is an array of user objects from DiscordAPI to add, server is a
+// document representing the guild which the users belong to
+const addUsers = async (users, server) => {
+  // get all users stored in Users collection
+
+  // extract ids of all users
+
+  const newUsers = [];
+
+  // loop through all users in current server, check if they exist in database
+  users.forEach(async (user) => {
+    // if (storedUserIDs.includes(user.id)) {
+    //   const userDoc = storedUsers.find((user) => user.userID === user.id);
+    //   userDoc.count++;
+    //   userDoc.save();
+    // } else {
+    //   newUsers.push(user);
+    // }
+    // const userDoc = await User.findOne({ userID: user.id });
+    // if (!userDoc) {
+    //   newUsers.push(user);
+    //   console.log(newUsers);
+    //   // addNewUser(user, guildDoc);
+    // } else {
+    //   userDoc.count++;
+    //   console.log(userDoc.userID, userDoc.count);
+    //   await userDoc.save();
+    // }
+  });
+  console.log(newUsers);
+  addNewUsers(newUsers, guildDoc);
+};
+
+// function to create new user document if not found
+const addNewUsers = async (users, server) => {
+  users.forEach(async (user) => {
+    const newUser = new User({ userID: user.id });
+    await newUser.save();
+    server.users.push(newUser);
+  });
+
+  await server.save();
 };
 
 // remove channel from database along with reference
@@ -83,9 +134,10 @@ const updateDatabase = async (client) => {
   // get all saved servers in database
   let saved;
   try {
-    saved = await Server.find({ serverID: { $in: guildIds } }).populate(
-      "voiceChannels"
-    );
+    // need to populate user field as well
+    saved = await Server.find({ serverID: { $in: guildIds } })
+      .populate("voiceChannels")
+      .populate("users");
   } catch (e) {
     console.error(e);
   }
@@ -102,8 +154,12 @@ const updateDatabase = async (client) => {
     (server) => !savedServerIds.includes(server.id)
   );
 
+  // guaranteed to match up to an existing server since redundant entries have
+  // been deleted previously
   saved.forEach(async (server) => {
     const serverID = server.serverID;
+    const serverData = currentServers.find((s) => s.id === serverID);
+
     // get ids for all voice channels in server from Discord API
     const voiceChannelIds = currentServers
       .find((s) => s.id === serverID)
@@ -133,6 +189,41 @@ const updateDatabase = async (client) => {
     toAdd.forEach(async (add) => {
       addChannelToDb(add, server, serverID);
     });
+
+    // get all users currently in server via DiscordAPI
+    const users = await serverData.members.fetch();
+
+    const userIDs = users.array().map((user) => user.id);
+    // get all User documents from database matching current server
+    const userDocs = server.users;
+    const userDocIDs = userDocs.map((user) => user.userID);
+    // filter out documents which no longer match up to a present user
+    const usersToDelete = userDocs.filter((user) =>
+      userIDs.includes(user.userID)
+    );
+
+    // find users which are not stored in the current servers reference of users
+    const usersToAdd = users.filter((user) => !userDocIDs.includes(user.id));
+
+    // decrement old user documents, delete if count == 0
+    usersToDelete.forEach((user) => {
+      if (user.count === 1) {
+        user.remove();
+      } else {
+        user.count--;
+        user.save();
+      }
+    });
+    // increment new user documents, create if did not exist previously
+    // users.forEach((u) => {
+    //   console.log(u);
+    //   const doc = userDocs.find((u) => u.userID === user.id);
+    //   // user already exists in database
+    //   if (!doc) {
+    //     addNewUser(u, server);
+    //   }
+    // });
+    addUsers(usersToAdd, server);
   });
 
   // Add new servers to database alongside their voice channels
