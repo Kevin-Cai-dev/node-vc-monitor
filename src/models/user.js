@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const Server = require("./server");
+const VC = require("./vc");
 
 const userSchema = new mongoose.Schema({
   userID: {
@@ -10,10 +12,9 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: false,
   },
-  count: {
-    type: Number,
-    required: true,
-    default: 1,
+  server: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Server",
   },
 });
 

@@ -19,32 +19,34 @@ const serverSchema = new mongoose.Schema({
 
 serverSchema.pre("deleteOne", async function (next) {
   await VC.deleteMany({ owner: this._id });
-  const server = await Server.findOne(this._conditions).populate("User");
-  server.users.forEach(async (user) => {
-    if (user.count == 1) {
-      await user.remove();
-    } else {
-      user.count -= 1;
-      await user.save();
-    }
-  });
+  // const server = await Server.findOne(this._conditions).populate("User");
+  // server.users.forEach(async (user) => {
+  //   if (user.count == 1) {
+  //     await user.remove();
+  //   } else {
+  //     user.count -= 1;
+  //     await user.save();
+  //   }
+  // });
+  await User.deleteMany({ server: this._id });
   next();
 });
 
 serverSchema.pre("deleteMany", async function (next) {
   // for each server, call VC.deleteMany
-  const deletedData = await Server.find(this._conditions).populate("User");
+  const deletedData = await Server.find(this._conditions);
   if (deletedData.length !== 0) {
     deletedData.forEach(async (del) => {
       await VC.deleteMany({ owner: del._id });
-      del.users.forEach(async (user) => {
-        if (user.count == 1) {
-          await user.remove();
-        } else {
-          user.count -= 1;
-          await user.save();
-        }
-      });
+      // del.users.forEach(async (user) => {
+      //   if (user.count == 1) {
+      //     await user.remove();
+      //   } else {
+      //     user.count -= 1;
+      //     await user.save();
+      //   }
+      // });
+      await User.deleteMany({ server: del._id });
     });
   }
   next();
