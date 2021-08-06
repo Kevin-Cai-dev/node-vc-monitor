@@ -46,7 +46,7 @@ const saveServerToDb = async (guild) => {
 
   const users = await guild.members.fetch();
   // loop through all users in server, save them and add references
-  addUsers(users.array(), server);
+  addUsers(users.array(), server.serverID);
 };
 
 // remove server and children channels from database
@@ -67,40 +67,66 @@ const findAndDeleteChannel = async (channel) => {
 
 // users is an array of user objects from DiscordAPI to add, server is a
 // document representing the guild which the users belong to
-const addUsers = async (users, server) => {
+
+// can change server to serverID instead
+// check whether count increases
+const addUsers = async (users, serverID) => {
   // get all users stored in Users collection
 
   // extract ids of all users
 
-  const newUsers = [];
-  const allUsers = await User.find({});
-  const allUserIDs = allUsers.map((user) => user.userID);
-
+  // const newUsers = [];
+  // // get all user documents in database
+  // const allUsers = await User.find();
+  // const allUserIDs = allUsers.map((user) => user.userID);
+  // console.log(allUsers);
   // loop through all users in current server, check if they exist in database
   users.forEach(async (user) => {
+    const uid = user.user.id;
+    const userDoc = await User.findOne({ userID: uid });
     if (user.user.bot) {
+      console.log("BOT", uid);
       return;
-    } else if (allUserIDs.includes(user.id)) {
-      const userDoc = storedUsers.find((user) => user.userID === user.id);
+    } else if (userDoc) {
+      // console.log("duplicate found");
       userDoc.count++;
-      await userDoc.save();
+      await userDoc.save(async () => {
+        await Server.updateOne({ serverID }, { $push: { users: userDoc } });
+      });
     } else {
-      newUsers.push(user);
+      // console.log(uid);
+      addNewUser(user, serverID);
     }
+
+    // else if (allUserIDs.includes(uid)) {
+    //   console.log("found duplicate", uid);
+    //   const userDoc = allUsers.find((user) => user.userID === uid);
+    //   userDoc.count++;
+    //   await userDoc.save();
+    // } else {
+    //   console.log(uid);
+    //   newUsers.push(user);
+    // }
   });
-  console.log(newUsers);
-  addNewUsers(newUsers, server.serverID);
+  // console.log(newUsers);
+  // addNewUser(newUsers, server.serverID);
 };
 
 // function to create new user document if not found
-const addNewUsers = async (users, serverID) => {
-  users.forEach(async (user) => {
-    const newUser = new User({ userID: user.id });
-    await newUser.save(async () => {
-      await Server.updateOne({ serverID }, { $push: { users: newUser } });
-    });
-    // server.users.push(newUser);
+const addNewUser = async (user, serverID) => {
+  const newUser = new User({ userID: user.id });
+  await newUser.save(async () => {
+    await Server.updateOne({ serverID }, { $push: { users: newUser } });
   });
+
+  // users.forEach(async (user) => {
+  //   const newUser = new User({ userID: user.id });
+  //   await newUser.save(async () => {
+  //     await Server.updateOne({ serverID }, { $push: { users: newUser } });
+  //   });
+  //   console.log("added");
+  //   // server.users.push(newUser);
+  // });
 
   // newVC.save(async () => {
   //   try {
