@@ -1,4 +1,3 @@
-// const { User } = require("discord.js");
 const Server = require("../models/server");
 const VC = require("../models/vc");
 const User = require("../models/user");

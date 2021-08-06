@@ -1,6 +1,6 @@
 # node-vc-monitor
 
-[DEV Bot link](https://discord.com/api/oauth2/authorize?client_id=872840310097584159&permissions=3088&scope=bot) \
+[DEV Bot link](https://discord.com/api/oauth2/authorize?client_id=872840310097584159&permissions=3088&scope=bot)
 
 This project aims to provide a Discord bot which alerts subscribed users
 whenever new activity is detected in the specified voice channels.\
@@ -29,18 +29,15 @@ allowing me to learn new tools.
 server has an array of user references CHECK
 
 when adding server, create new vc documents, create new user documents if not in
-database, else increment user servercount by 1
+database CHECK
 
-when deleting server, remove vc documents and decrement servercount for all
-users by 1. if servercount == 0, remove user document
+when deleting server, remove vc documents and remove user documents
 
 when updating server, consider user join/leave logic
 
-when user leaves, remove reference from server and decrement servercount by 1.
-if servercount == 0, remove user document
+when user leaves, remove reference from server and voice channels, remove user document
 
-when user joins, add reference to server and if user already exists increment
-servercount by 1. else create new user document and add reference
+when user joins, add reference to server and create new user document
 
 when vc is created, go through all users in server and check for autosub flag.
 if true, add to vc list
