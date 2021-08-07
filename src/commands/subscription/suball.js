@@ -1,5 +1,6 @@
 const Server = require("../../models/server");
 const VC = require("../../models/vc");
+const User = require("../../models/user");
 
 module.exports = {
   name: "suball",
@@ -14,22 +15,20 @@ module.exports = {
     const server = await Server.findOne({ serverID: guild.id }).populate(
       "voiceChannels"
     );
+    const user = await User.findOne({ userID: member.id, server: server._id });
     // extract all voice channels in server
-    const vcAll = guild.channels.cache.filter(
-      (channel) => channel.type === "voice"
-    );
+    // const vcAll = guild.channels.cache.filter(
+    //   (channel) => channel.type === "voice"
+    // );
     const response = "Successfully subscribed to all channels!";
 
     const voiceChannels = server.voiceChannels;
 
     voiceChannels.forEach(async (channel) => {
-      const exists = channel.subs.some((uid) => uid === member.id);
+      const exists = channel.subs.some((uid) => uid === user._id);
       const discChannel = guild.channels.cache.get(channel.vcID);
       if (!exists && discChannel.permissionsFor(member).has("VIEW_CHANNEL")) {
-        await VC.updateOne(
-          { vcID: channel.vcID },
-          { $push: { subs: member.id } }
-        );
+        await VC.updateOne({ vcID: channel.vcID }, { $push: { subs: user } });
       }
     });
 

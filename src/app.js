@@ -10,7 +10,8 @@ const {
   deleteServerFromDb,
   addNewChannel,
   findAndDeleteChannel,
-  removeUserSubscriptions,
+  removeUser,
+  addUser,
 } = require("./queries/queries");
 
 const intents = new Discord.Intents([
@@ -128,7 +129,17 @@ client.on("guildMemberRemove", (member) => {
     return;
   }
   const guild = member.guild;
-  removeUserSubscriptions(guild, member);
+  removeUser(guild, member);
+});
+
+// add event for user joining server
+client.on("guildMemberAdd", (member) => {
+  if (member.user.bot) {
+    return;
+  }
+  console.log("Triggered");
+  const guild = member.guild;
+  addUser(guild, member);
 });
 
 client.login(process.env.TOKEN);

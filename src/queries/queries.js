@@ -72,6 +72,7 @@ const addUsers = async (users, server) => {
       return;
     } else {
       addNewUser(user, server);
+      console.log("Added");
     }
   });
 };
@@ -305,7 +306,7 @@ const handleCommand = async (client, message) => {
 const pingUsers = async (guild, newChannel, member, recentDM) => {
   let voiceChannel;
   try {
-    voiceChannel = await VC.findOne({ vcID: newChannel.id });
+    voiceChannel = await VC.findOne({ vcID: newChannel.id }).populate();
   } catch (e) {
     console.error(e);
   }
@@ -326,8 +327,8 @@ const pingUsers = async (guild, newChannel, member, recentDM) => {
   }
 
   voiceChannel.subs.forEach((user) => {
-    if (member.id !== user) {
-      const receiver = allMembers.get(user);
+    if (member.id !== user.userID) {
+      const receiver = allMembers.get(user.userID);
       if (!receiver) {
         return console.log("no receiver found!");
       }
@@ -350,23 +351,48 @@ const pingUsers = async (guild, newChannel, member, recentDM) => {
 };
 
 // remove user subscriptions from all voice channels in server
-const removeUserSubscriptions = async (server, user) => {
+const removeUser = async (server, user) => {
   let serverData;
   try {
-    serverData = await Server.findOne({ serverID: server.id }).populate(
-      "voiceChannels"
-    );
+    serverData = await Server.findOne({ serverID: server.id });
   } catch (e) {
     console.error(e);
   }
   if (!serverData) {
     return console.log("Cannot find server for removed user!");
   }
-  serverData.voiceChannels.forEach(async (channel) => {
-    const index = channel.subs.indexOf(user.id);
-    channel.subs.splice(index, 1);
-    await channel.save();
+  // serverData.voiceChannels.forEach(async (channel) => {
+  //   const index = channel.subs.indexOf(user.id);
+  //   channel.subs.splice(index, 1);
+  //   await channel.save();
+  // });
+
+  const userData = await User.findOne({
+    userID: user.id,
+    server: serverData._id,
   });
+  if (!userData) {
+    return console.log("Cannot find user data!");
+  }
+
+  await VC.updateMany(
+    { owner: userData.server },
+    { $pull: { subs: userData._id } }
+  );
+
+  await User.deleteOne({ userID: user.id });
+  const index = serverData.users.indexOf(userData._id);
+  serverData.users.splice(index, 1);
+  await serverData.save();
+};
+
+const addUser = async (guild, user) => {
+  const server = await Server.findOne({ serverID: guild.id });
+  if (!server) {
+    return console.log("Could not find server to add user!");
+  }
+  console.log(user);
+  addNewUser(user, server);
 };
 
 module.exports = {
@@ -377,5 +403,6 @@ module.exports = {
   deleteServerFromDb,
   addNewChannel,
   findAndDeleteChannel,
-  removeUserSubscriptions,
+  removeUser,
+  addUser,
 };

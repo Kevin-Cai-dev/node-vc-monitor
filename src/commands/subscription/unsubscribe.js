@@ -1,7 +1,7 @@
-const fs = require("fs");
 const stringSimilarity = require("string-similarity");
 const Server = require("../../models/server");
 const VC = require("../../models/vc");
+const User = require("../../models/user");
 
 module.exports = {
   name: "unsubscribe",
@@ -51,8 +51,12 @@ module.exports = {
         error += `${args[i]},`;
         continue;
       }
-
-      const index = voiceChannelData.subs.indexOf(member.id);
+      const guildDoc = await Server.findOne({ serverID: guild.id });
+      const userDoc = await User.findOne({
+        userID: member.id,
+        server: guildDoc._id,
+      });
+      const index = voiceChannelData.subs.indexOf(userDoc._id);
       voiceChannelData.subs.splice(index, 1);
       await voiceChannelData.save();
     }

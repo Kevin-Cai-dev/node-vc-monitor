@@ -1,5 +1,7 @@
 const stringSimilarity = require("string-similarity");
 const VC = require("../../models/vc");
+const Server = require("../../models/server");
+const User = require("../../models/user");
 
 module.exports = {
   name: "subscribe",
@@ -51,7 +53,13 @@ module.exports = {
 
       if (!exists) {
         if (vc.permissionsFor(member).has("VIEW_CHANNEL")) {
-          voiceChannelData.subs.push(member.id);
+          // find server and user in the server
+          const guildDoc = await Server.findOne({ serverID: guild.id });
+          const userDoc = await User.findOne({
+            userID: member.id,
+            server: guildDoc._id,
+          });
+          voiceChannelData.subs.push(userDoc._id);
           await voiceChannelData.save();
         } else {
           error += `${args[i]},`;
