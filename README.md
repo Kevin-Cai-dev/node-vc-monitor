@@ -1,7 +1,5 @@
 # node-vc-monitor
 
-[DEV Bot link](https://discord.com/api/oauth2/authorize?client_id=872840310097584159&permissions=3088&scope=bot)
-
 This project aims to provide a Discord bot which alerts subscribed users
 whenever new activity is detected in the specified voice channels.\
 Made using Node.js, DiscordAPI, MongoDB.
