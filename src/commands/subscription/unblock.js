@@ -17,7 +17,7 @@ module.exports = {
     );
     const vcNames = vcAll.map((vc) => vc.name.toLowerCase());
     let error = "Could not find channel(s): ";
-    let response = "Updated restriction flag successfully!";
+    let response = "Updated all restriction flag(s) to `FALSE` successfully!";
     for (let i = 0; i < args.length; i++) {
       args[i] = args[i].trim();
 

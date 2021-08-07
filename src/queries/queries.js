@@ -316,6 +316,9 @@ const pingUsers = async (guild, newChannel, member, recentDM) => {
   if (!voiceChannel) {
     return console.error("Could not read voice channel data!");
   }
+  if (voiceChannel.restricted) {
+    return console.log(`Channel ${newChannel.id} is restricted!`);
+  }
 
   let allMembers = undefined;
   try {

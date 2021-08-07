@@ -21,8 +21,11 @@ module.exports = {
 
     // no args provided
     if (!args.length) {
+      const tick = "```";
       data.push("Here is a list of all available commands:");
-      data.push(commands.map((command) => `\`${command.name}\``).join(", "));
+      data.push(tick);
+      data.push(commands.map((command) => `${command.name}`).join(", "));
+      data.push(tick);
       data.push(
         `You can send \`${prefix}help [command name]\` to get info on a specific command`
       );

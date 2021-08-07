@@ -1,6 +1,7 @@
 const stringSimilarity = require("string-similarity");
 const VC = require("../../models/vc");
 
+// kinda like sending the vc into limbo, no one can sub and no one can get pinged
 module.exports = {
   name: "block",
   description: "Enforce restrictions on subscriptions to one or more channels",
@@ -17,7 +18,7 @@ module.exports = {
     );
     const vcNames = vcAll.map((vc) => vc.name.toLowerCase());
     let error = "Could not find channel(s): ";
-    let response = "Updated restriction flag successfully!";
+    let response = "Updated all restriction flag(s) to `TRUE` successfully!";
     for (let i = 0; i < args.length; i++) {
       args[i] = args[i].trim();
 

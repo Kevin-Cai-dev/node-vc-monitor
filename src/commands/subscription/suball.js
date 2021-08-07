@@ -20,11 +20,14 @@ module.exports = {
     // const vcAll = guild.channels.cache.filter(
     //   (channel) => channel.type === "voice"
     // );
-    const response = "Successfully subscribed to all channels!";
+    const response = "Successfully subscribed to all available channels!";
 
     const voiceChannels = server.voiceChannels;
 
     voiceChannels.forEach(async (channel) => {
+      if (channel.restricted) {
+        return;
+      }
       const exists = channel.subs.some((uid) => uid === user._id);
       const discChannel = guild.channels.cache.get(channel.vcID);
       if (!exists && discChannel.permissionsFor(member).has("VIEW_CHANNEL")) {

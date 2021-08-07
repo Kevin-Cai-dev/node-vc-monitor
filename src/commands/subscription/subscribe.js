@@ -44,8 +44,9 @@ module.exports = {
       }
 
       const voiceChannelData = await VC.findOne({ vcID: vc.id });
-      if (!voiceChannelData) {
+      if (!voiceChannelData || voiceChannelData.restricted) {
         error += `${args[i]},`;
+        s;
         continue;
       }
 
