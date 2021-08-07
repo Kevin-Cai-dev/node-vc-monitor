@@ -24,22 +24,3 @@ Originally designed in python using the discord.py library, I opted to redevelop
 
 Currently, I use a MongoDB database to store servers, voice channels and user subscriptions. It is currently hosted by me on Heroku. This is a self-project aimed to both provide a useful service as well as
 allowing me to learn new tools.
-
-### TODO
-server has an array of user references CHECK
-
-when adding server, create new vc documents, create new user documents if not in
-database CHECK
-
-when deleting server, remove vc documents and remove user documents
-
-when updating server, consider user join/leave logic
-
-when user leaves, remove reference from server and voice channels, remove user document
-
-when user joins, add reference to server and create new user document
-
-when vc is created, go through all users in server and check for autosub flag.
-if true, add to vc list
-
-modify any checks for vc users to populate and map userID first before operating
