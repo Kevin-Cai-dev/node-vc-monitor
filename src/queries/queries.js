@@ -14,8 +14,11 @@ const addNewChannel = async (vcID, guild) => {
 };
 
 // Adds voice channel to database, adds reference to parent server
-const addChannelToDb = (vcID, server, guildId) => {
+const addChannelToDb = async (vcID, server, guildId) => {
   const newVC = new VC({ vcID, owner: server });
+  const autosubs = await User.find({ server: server._id, auto: true });
+  const subIDs = autosubs.map((user) => user._id);
+  newVC.subs = subIDs;
   newVC.save(async () => {
     try {
       await Server.updateOne(
@@ -72,7 +75,6 @@ const addUsers = async (users, server) => {
       return;
     } else {
       addNewUser(user, server);
-      console.log("Added");
     }
   });
 };
@@ -306,7 +308,7 @@ const handleCommand = async (client, message) => {
 const pingUsers = async (guild, newChannel, member, recentDM) => {
   let voiceChannel;
   try {
-    voiceChannel = await VC.findOne({ vcID: newChannel.id }).populate();
+    voiceChannel = await VC.findOne({ vcID: newChannel.id }).populate("subs");
   } catch (e) {
     console.error(e);
   }
