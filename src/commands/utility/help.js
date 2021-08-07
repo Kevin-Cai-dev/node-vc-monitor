@@ -1,4 +1,3 @@
-const fs = require("fs");
 const Server = require("../../models/server");
 
 module.exports = {
@@ -52,6 +51,9 @@ module.exports = {
     }
     if (command.usage) {
       data.push(`**Usage:** ${prefix}${command.name} ${command.usage}`);
+    }
+    if (command.permissions) {
+      data.push(`**Required Permissions:** \`${command.permissions}\``);
     }
 
     message.channel.send(data, { split: true });

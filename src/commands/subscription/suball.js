@@ -28,7 +28,9 @@ module.exports = {
       if (channel.restricted) {
         return;
       }
-      const exists = channel.subs.some((uid) => uid === user._id);
+      console.log(user._id);
+      const exists = channel.subs.includes(user._id);
+      console.log(exists);
       const discChannel = guild.channels.cache.get(channel.vcID);
       if (!exists && discChannel.permissionsFor(member).has("VIEW_CHANNEL")) {
         await VC.updateOne({ vcID: channel.vcID }, { $push: { subs: user } });

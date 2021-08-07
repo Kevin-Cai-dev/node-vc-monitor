@@ -50,16 +50,18 @@ module.exports = {
         continue;
       }
 
-      const exists = voiceChannelData.subs.some((uid) => uid === member.id);
+      const guildDoc = await Server.findOne({ serverID: guild.id });
+      const userDoc = await User.findOne({
+        userID: member.id,
+        server: guildDoc._id,
+      });
+
+      const exists = voiceChannelData.subs.includes(userDoc._id);
 
       if (!exists) {
         if (vc.permissionsFor(member).has("VIEW_CHANNEL")) {
           // find server and user in the server
-          const guildDoc = await Server.findOne({ serverID: guild.id });
-          const userDoc = await User.findOne({
-            userID: member.id,
-            server: guildDoc._id,
-          });
+
           voiceChannelData.subs.push(userDoc._id);
           await voiceChannelData.save();
         } else {
