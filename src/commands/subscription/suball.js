@@ -12,25 +12,22 @@ module.exports = {
     const guild = message.guild;
     const member = message.member;
 
+    // find matching server and user docs in db
     const server = await Server.findOne({ serverID: guild.id }).populate(
       "voiceChannels"
     );
     const user = await User.findOne({ userID: member.id, server: server._id });
-    // extract all voice channels in server
-    // const vcAll = guild.channels.cache.filter(
-    //   (channel) => channel.type === "voice"
-    // );
-    const response = "Successfully subscribed to all available channels!";
 
+    const response = "Successfully subscribed to all available channels!";
+    // extract all voice channels in server
     const voiceChannels = server.voiceChannels;
 
     voiceChannels.forEach(async (channel) => {
       if (channel.restricted) {
         return;
       }
-      console.log(user._id);
+      // if user doesnt exist in sub list, add to sub list
       const exists = channel.subs.includes(user._id);
-      console.log(exists);
       const discChannel = guild.channels.cache.get(channel.vcID);
       if (!exists && discChannel.permissionsFor(member).has("VIEW_CHANNEL")) {
         await VC.updateOne({ vcID: channel.vcID }, { $push: { subs: user } });

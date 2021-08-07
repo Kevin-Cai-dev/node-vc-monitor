@@ -12,6 +12,7 @@ module.exports = {
     const member = message.member;
     let server;
     let user;
+    // get server and user docs from db
     try {
       server = await Server.findOne({ serverID: guild.id });
       user = await User.findOne({
@@ -26,6 +27,7 @@ module.exports = {
       console.log("Could not find either server or user for autosub!");
       return callback("Autosub failed!");
     }
+    // toggle auto flag for user and save
     user.auto = !user.auto;
     if (user.auto) {
       state = "on";

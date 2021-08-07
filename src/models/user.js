@@ -1,6 +1,4 @@
 const mongoose = require("mongoose");
-const Server = require("./server");
-const VC = require("./vc");
 
 const userSchema = new mongoose.Schema({
   userID: {

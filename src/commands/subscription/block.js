@@ -13,9 +13,11 @@ module.exports = {
   async execute(message, args, callback) {
     const guild = message.guild;
 
+    // get all voice channels in server
     const vcAll = guild.channels.cache.filter(
       (channel) => channel.type === "voice"
     );
+    // extract all voice channel names
     const vcNames = vcAll.map((vc) => vc.name.toLowerCase());
     let error = "Could not find channel(s): ";
     let response = "Updated all restriction flag(s) to `TRUE` successfully!";
@@ -24,7 +26,6 @@ module.exports = {
 
       // finding the best matching voice channel name based on args
       const { bestMatch } = stringSimilarity.findBestMatch(args[i], vcNames);
-
       if (bestMatch.rating < 0.5) {
         error += `${args[i]},`;
         continue;
@@ -38,12 +39,13 @@ module.exports = {
         error += `${args[i]},`;
         continue;
       }
-
+      // retrieving matching voice channel doc from db
       const voiceChannelData = await VC.findOne({ vcID: vc.id });
       if (!voiceChannelData) {
         error += `${args[i]},`;
         continue;
       }
+      // setting restricted flag and saving
       voiceChannelData.restricted = true;
       await voiceChannelData.save();
     }

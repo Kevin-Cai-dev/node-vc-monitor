@@ -2,17 +2,6 @@ const fs = require("fs");
 require("dotenv").config({ path: "./src/config/dev.env" });
 require("./data/mongoose");
 const Discord = require("discord.js");
-// const {
-//   updateDatabase,
-//   handleCommand,
-//   pingUsers,
-//   saveServerToDb,
-//   deleteServerFromDb,
-//   addNewChannel,
-//   findAndDeleteChannel,
-//   removeUser,
-//   addUser,
-// } = require("./queries/queries");
 const updateDatabase = require("./queries/preload");
 const handleCommand = require("./queries/commands");
 const pingUsers = require("./queries/ping");
