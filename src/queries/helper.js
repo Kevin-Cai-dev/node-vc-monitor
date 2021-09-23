@@ -81,6 +81,10 @@ const addUsers = async (users, server) => {
 
 // function to create new user document if not found
 const addNewUser = async (user, server) => {
+  const check = await User.findOne({ userID: user.id, server });
+  if (!check) {
+    return console.log("User already exists in this server!");
+  }
   const newUser = new User({ userID: user.id, server });
   await newUser.save(async () => {
     await Server.updateOne(
