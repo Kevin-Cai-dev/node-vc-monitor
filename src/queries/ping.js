@@ -37,6 +37,7 @@ const pingUsers = async (guild, newChannel, member, recentDM) => {
         return;
       }
       try {
+        console.log(receiver.user.username);
         receiver.send(
           `${receiver}, ${member.displayName} joined the voice channel ${newChannel.name} in server \'${guild.name}\'!`
         );
