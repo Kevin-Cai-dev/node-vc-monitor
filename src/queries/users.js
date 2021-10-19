@@ -28,7 +28,7 @@ const removeUser = async (server, user) => {
     { $pull: { subs: userData._id } }
   );
 
-  await User.deleteOne({ userID: user.id });
+  await userData.remove();
   const index = serverData.users.indexOf(userData._id);
   serverData.users.splice(index, 1);
   await serverData.save();

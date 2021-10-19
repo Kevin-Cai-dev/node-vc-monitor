@@ -10,7 +10,6 @@ const {
 const updateDatabase = async (client) => {
   const guilds = client.guilds.cache.array();
   const guildIds = guilds.map((server) => server.id);
-
   // delete guilds which the bot is no longer part of
   await Server.deleteMany({ serverID: { $nin: guildIds } });
 
@@ -18,6 +17,7 @@ const updateDatabase = async (client) => {
   let saved;
   try {
     // need to populate user field as well
+
     saved = await Server.find({ serverID: { $in: guildIds } })
       .populate("voiceChannels")
       .populate("users");
@@ -26,7 +26,10 @@ const updateDatabase = async (client) => {
   }
 
   // extract all ids of saved servers
-  const savedServerIds = saved.map((server) => server.serverID);
+  let savedServerIds = [];
+  if (saved) {
+    savedServerIds = saved.map((server) => server.serverID);
+  }
 
   // get all servers which are currently tracked in database
   const currentServers = guilds.filter((server) =>
@@ -77,6 +80,7 @@ const updateDatabase = async (client) => {
     const users = await serverData.members.fetch();
 
     const userIDs = users.array().map((user) => user.user.id);
+
     // get all User documents from database matching current server
     const userDocs = server.users;
     const userDocIDs = userDocs.map((user) => user.userID);
@@ -87,7 +91,6 @@ const updateDatabase = async (client) => {
 
     // find users which are not stored in the current servers reference of users
     const usersToAdd = users.filter((user) => !userDocIDs.includes(user.id));
-
     // call deleteMany on usersToDelete
     usersToDelete.forEach(async (user) => {
       await Server.updateOne(

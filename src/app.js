@@ -1,6 +1,7 @@
 const fs = require("fs");
 require("dotenv").config({ path: "./src/config/dev.env" });
 require("./data/mongoose");
+
 const Discord = require("discord.js");
 const updateDatabase = require("./queries/preload");
 const handleCommand = require("./queries/commands");
@@ -129,6 +130,7 @@ client.on("guildMemberRemove", (member) => {
   }
   const guild = member.guild;
   removeUser(guild, member);
+  console.log("member removed from guild", guild);
 });
 
 // add event for user joining server
